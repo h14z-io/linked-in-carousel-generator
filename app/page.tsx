@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,6 +20,7 @@ import { renderCarouselHTML } from "@/lib/template-renderer"
 import { fetchMultipleUrls, isValidUrl } from "@/lib/fetch-url-content"
 import { GoogleGenAI } from "@google/genai"
 import html2canvas from "html2canvas"
+import { toJpeg } from "html-to-image"
 import {
   Dialog,
   DialogContent,
@@ -105,11 +106,27 @@ export default function HomePage() {
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState("")
+  const [mounted, setMounted] = useState(false)
+
+  const [fontScale, setFontScale] = useState(1.0)
 
   const [keywordInput, setKeywordInput] = useState("")
 
   const [urlInputs, setUrlInputs] = useState<string[]>([""])
   const [urlErrors, setUrlErrors] = useState<string[]>([""])
+
+  // Fix hydration mismatch: only render after mounting on client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Update preview when fontScale changes
+  useEffect(() => {
+    if (slidesData.length > 0) {
+      const html = renderCarouselHTML(slidesData, input.templateId, fontScale)
+      setGeneration((prev) => ({ ...prev, htmlPreview: html }))
+    }
+  }, [fontScale])
 
   const handleSourceChange = (value: string) => {
     const lines = value.split("\n").map((s) => s.trim())
@@ -194,13 +211,61 @@ export default function HomePage() {
     if (slidesData.length === 0) return
 
     console.log("[v0] Changing template to:", newTemplateId)
-    const html = renderCarouselHTML(slidesData, newTemplateId)
+    const html = renderCarouselHTML(slidesData, newTemplateId, fontScale)
     setGeneration((prev) => ({ ...prev, htmlPreview: html }))
     setInput((prev) => ({ ...prev, templateId: newTemplateId as any }))
   }
 
+  const calculateOptimalFontScale = () => {
+    if (slidesData.length === 0) return 1.0
+
+    let totalTitleLength = 0
+    let totalBullets = 0
+    let totalBulletLength = 0
+
+    slidesData.forEach((slide) => {
+      totalTitleLength += slide.title.length
+      totalBullets += slide.bullets.length
+      slide.bullets.forEach((bullet) => {
+        totalBulletLength += bullet.length
+      })
+    })
+
+    const avgTitleLength = totalTitleLength / slidesData.length
+    const avgBulletsPerSlide = totalBullets / slidesData.length
+    const avgBulletLength = totalBulletLength / totalBullets
+
+    // Start with 1.0 scale
+    let scale = 1.0
+
+    // Reduce scale if titles are long (>40 chars)
+    if (avgTitleLength > 40) {
+      scale -= (avgTitleLength - 40) * 0.006 // -0.6% per char over 40
+    }
+
+    // Reduce scale if many bullets (>3)
+    if (avgBulletsPerSlide > 3) {
+      scale -= (avgBulletsPerSlide - 3) * 0.08 // -8% per extra bullet
+    }
+
+    // Reduce scale if bullets are long (>60 chars)
+    if (avgBulletLength > 60) {
+      scale -= (avgBulletLength - 60) * 0.004 // -0.4% per char over 60
+    }
+
+    // Clamp between 0.5 and 2.5
+    return Math.max(0.5, Math.min(2.5, scale))
+  }
+
+  const applyAutoScale = () => {
+    const optimal = calculateOptimalFontScale()
+    setFontScale(optimal)
+  }
+
   const editSlide = async (slideIndex: number, instructions: string) => {
     const apiKey = localStorage.getItem("geminiApiKey")
+    const geminiModel = localStorage.getItem("geminiModel") || "gemini-2.5-flash"
+
     if (!apiKey) {
       setError("Por favor configura tu API key de Gemini en la página de configuración")
       return
@@ -216,6 +281,7 @@ export default function HomePage() {
 
     try {
       console.log("[v0] Editing slide", slideIndex + 1, "with instructions:", instructions)
+      console.log("[v0] Using model:", geminiModel)
 
       const ai = new GoogleGenAI({ apiKey })
       const currentSlide = slidesData[slideIndex]
@@ -227,31 +293,36 @@ export default function HomePage() {
 
       const prompt = `${languageInstruction}
 
-You are editing slide ${slideIndex + 1} of a LinkedIn carousel.
+${input.language === "en" ? "You are editing slide" : "Estás editiendo el slide"} ${slideIndex + 1} ${input.language === "en" ? "of a LinkedIn carousel (1080x1080 SQUARE FORMAT)." : "de un carrusel de LinkedIn (formato CUADRADO 1080x1080)."}
 
-CURRENT SLIDE:
+${input.language === "en" ? "CURRENT SLIDE:" : "SLIDE ACTUAL:"}
 Title: ${currentSlide.title}
-Bullets:
+${input.language === "en" ? "Bullets:" : "Bullets:"}
 ${currentSlide.bullets.map((b, i) => `${i + 1}. ${b}`).join("\n")}
 
-USER INSTRUCTIONS:
+${input.language === "en" ? "USER INSTRUCTIONS:" : "INSTRUCCIONES DEL USUARIO:"}
 ${instructions}
 
-REQUIREMENTS:
-- Maintain the same structure (title + 3-5 bullets)
-- Keep the professional LinkedIn tone
-- Follow copywriting best practices (action verbs, specific data, clear benefits)
-- Make the changes requested while keeping the slide cohesive with the carousel theme
+${input.language === "en" ? "CRITICAL FOR SQUARE FORMAT:" : "CRÍTICO PARA FORMATO CUADRADO:"}
+- ${input.language === "en" ? "Title: Max 2 lines (50 characters)" : "Título: Máximo 2 líneas (50 caracteres)"}
+- ${input.language === "en" ? "Bullets: Max 12 words EACH - ultra-concise, scannable" : "Bullets: Máximo 12 palabras CADA UNO - ultra-concisos, escaneables"}
+- ${input.language === "en" ? "Every word must add value - no filler" : "Cada palabra debe agregar valor - sin relleno"}
 
-Respond ONLY with valid JSON in this format:
+${input.language === "en" ? "REQUIREMENTS:" : "REQUERIMIENTOS:"}
+- ${input.language === "en" ? "Maintain slide structure (title + 3-4 bullets)" : "Mantén la estructura del slide (título + 3-4 bullets)"}
+- ${input.language === "en" ? "Keep professional LinkedIn tone" : "Mantén el tono profesional de LinkedIn"}
+- ${input.language === "en" ? "Action verbs, specific data, clear benefits" : "Verbos de acción, datos específicos, beneficios claros"}
+- ${input.language === "en" ? "Implement user request while keeping coherence with carousel theme" : "Implementa la solicitud manteniendo coherencia con el tema del carrusel"}
+
+${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con JSON válido:"}
 {
-  "title": "Updated slide title",
-  "bullets": ["Updated bullet 1", "Updated bullet 2", "Updated bullet 3"],
-  "visual_direction": "Visual description for the slide"
+  "title": "${input.language === "en" ? "Updated slide title (max 2 lines)" : "Título actualizado (máx 2 líneas)"}",
+  "bullets": ["${input.language === "en" ? "Bullet 1 (max 12 words)" : "Bullet 1 (máx 12 palabras)"}", "${input.language === "en" ? "Bullet 2 (max 12 words)" : "Bullet 2 (máx 12 palabras)"}", "${input.language === "en" ? "Bullet 3 (max 12 words)" : "Bullet 3 (máx 12 palabras)"}"],
+  "visual_direction": "${input.language === "en" ? "Visual description for square format" : "Descripción visual para formato cuadrado"}"
 }`
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: geminiModel,
         contents: prompt,
         config: {
           temperature: 0.7,
@@ -268,7 +339,7 @@ Respond ONLY with valid JSON in this format:
         text = response.candidates[0].content.parts[0].text
       }
 
-      console.log("[v0] Slide edit response received")
+      console.log("[v0] Slide edit response received from", geminiModel)
 
       const updatedSlide: Slide = safeExtractJSON(text)
 
@@ -282,7 +353,7 @@ Respond ONLY with valid JSON in this format:
       setSlidesData(newSlidesData)
 
       // Re-render the carousel with updated slide
-      const html = renderCarouselHTML(newSlidesData, input.templateId)
+      const html = renderCarouselHTML(newSlidesData, input.templateId, fontScale)
       setGeneration((prev) => ({ ...prev, htmlPreview: html }))
 
       console.log("[v0] Slide edited successfully!")
@@ -298,6 +369,8 @@ Respond ONLY with valid JSON in this format:
 
   const generateCarousel = async () => {
     const apiKey = localStorage.getItem("geminiApiKey")
+    const geminiModel = localStorage.getItem("geminiModel") || "gemini-2.5-flash"
+
     if (!apiKey) {
       setError("Por favor configura tu API key de Gemini en la página de configuración")
       return
@@ -313,7 +386,7 @@ Respond ONLY with valid JSON in this format:
     setError("")
 
     try {
-      console.log("[v0] Iniciando generación con Gemini 2.5 Pro...")
+      console.log("[v0] Iniciando generación con modelo:", geminiModel)
       console.log("[v0] Template:", input.templateId)
       console.log("[v0] Slides:", input.slideCount)
       console.log("[v0] Audiencias:", input.audienceModes)
@@ -387,12 +460,12 @@ Respond ONLY with valid JSON in this format:
       const copyLengthInstructions = {
         short:
           input.language === "en"
-            ? "Keep post copies concise (150-200 words). Focus on key message and clear CTA."
-            : "Mantén los copys concisos (150-200 palabras). Enfócate en el mensaje clave y CTA claro.",
+            ? "Keep post copies VERY concise (100-150 words). Focus on 1 key insight and clear CTA. Ultra-scannable format."
+            : "Mantén los copys MUY concisos (100-150 palabras). Enfócate en 1 insight clave y CTA claro. Formato ultra-escaneable.",
         long:
           input.language === "en"
-            ? "Create detailed post copies (300-400 words). Tell a story, build context, and create emotional connection."
-            : "Crea copys detallados (300-400 palabras). Cuenta una historia, construye contexto y crea conexión emocional.",
+            ? "Create focused post copies (200-250 words). Tell a brief story, provide context, and include data points. Stay scannable."
+            : "Crea copys enfocados (200-250 palabras). Cuenta una historia breve, proporciona contexto e incluye datos. Mantén escaneable.",
       }
 
       const objectiveInstructions = {
@@ -450,7 +523,12 @@ Respond ONLY with valid JSON in this format:
 
       const prompt = `${languageInstruction}
 
-${input.language === "en" ? "Generate" : "Genera"} ${input.language === "en" ? "a professional LinkedIn carousel in valid JSON format." : "un carrusel profesional de LinkedIn en formato JSON válido."}
+${input.language === "en" ? "Generate" : "Genera"} ${input.language === "en" ? "a professional LinkedIn carousel in valid JSON format for 1080x1080 SQUARE format." : "un carrusel profesional de LinkedIn en formato JSON válido para formato CUADRADO 1080x1080."}
+
+${input.language === "en" ? "⚠️ CRITICAL: This is a SQUARE format (1080x1080px). Design text to be concise and scannable:" : "⚠️ CRÍTICO: Este es formato CUADRADO (1080x1080px). Diseña el texto para ser conciso y escaneable:"}
+${input.language === "en" ? "- Titles: Maximum 2 lines (50 chars) - must fit in headline space" : "- Títulos: Máximo 2 líneas (50 caracteres) - deben caber en espacio de título"}
+${input.language === "en" ? "- Bullets: Maximum 12 words EACH - highly specific, every word counts" : "- Bullets: Máximo 12 palabras CADA UNO - altamente específicos, cada palabra cuenta"}
+${input.language === "en" ? "- Content must be visual, high-impact, and immediately valuable" : "- El contenido debe ser visual, de alto impacto e inmediatamente valioso"}
 
 ${input.language === "en" ? "IMPORTANT: You MUST base the carousel content EXCLUSIVELY on the provided content below. Do NOT make assumptions or use external knowledge. Extract key insights, data, and information directly from the source material." : "IMPORTANTE: DEBES basar el contenido del carrusel EXCLUSIVAMENTE en el contenido proporcionado a continuación. NO hagas suposiciones ni uses conocimiento externo. Extrae insights clave, datos e información directamente del material fuente."}
 
@@ -481,18 +559,18 @@ ${input.language === "en" ? "COPYWRITING BEST PRACTICES:" : "MEJORES PRÁCTICAS 
 5. ${input.language === "en" ? "Include social proof or credibility indicators from the source" : "Incluye prueba social o indicadores de credibilidad del contenido fuente"}
 6. ${input.language === "en" ? "End with a clear, specific CTA" : "Termina con un CTA claro y específico"}
 
-${input.language === "en" ? "SLIDE STRUCTURE:" : "ESTRUCTURA DE SLIDES:"}
-- Slide 1: ${input.language === "en" ? "Hook - Present the problem/opportunity from the source content" : "Gancho - Presenta el problema/oportunidad del contenido fuente"}
-- Slides 2-${input.slideCount - 1}: ${input.language === "en" ? "Value - Solutions, insights, or framework extracted from source" : "Valor - Soluciones, insights o framework extraído del contenido fuente"}
-- Slide ${input.slideCount}: ${input.language === "en" ? "CTA - Clear next steps" : "CTA - Próximos pasos claros"}
+${input.language === "en" ? "SLIDE STRUCTURE (1080x1080 SQUARE FORMAT):" : "ESTRUCTURA DE SLIDES (FORMATO 1080x1080 CUADRADO):"}
+- Slide 1: ${input.language === "en" ? "Hook - Compelling title (max 2 lines) + problem/opportunity from source" : "Gancho - Título convincente (máx 2 líneas) + problema/oportunidad del contenido fuente"}
+- Slides 2-${input.slideCount - 1}: ${input.language === "en" ? "Value - Clear title + 3-4 concise bullets (max 12 words each) with data from source" : "Valor - Título claro + 3-4 bullets concisos (máx 12 palabras c/u) con datos del contenido fuente"}
+- Slide ${input.slideCount}: ${input.language === "en" ? "CTA - Bold title + 2-3 action items. Ends with clear call-to-action" : "CTA - Título audaz + 2-3 items de acción. Termina con CTA claro"}
 
 ${input.language === "en" ? "REQUIRED JSON FORMAT:" : "FORMATO JSON REQUERIDO:"}
 {
   "slides": [
     {
-      "title": "${input.language === "en" ? "Compelling slide title" : "Título convincente del slide"}",
-      "bullets": ["${input.language === "en" ? "Action-oriented point with specific data" : "Punto orientado a acción con datos específicos"}", "${input.language === "en" ? "Benefit-focused statement" : "Declaración enfocada en beneficios"}", "${input.language === "en" ? "Concrete example or proof point" : "Ejemplo concreto o punto de prueba"}"],
-      "visual_direction": "${input.language === "en" ? "Visual description" : "Descripción visual"}"
+      "title": "${input.language === "en" ? "Problem or Insight Hook" : "Gancho: Problema o Insight"}",
+      "bullets": ["${input.language === "en" ? "Specific stat from source (max 12 words)" : "Estadística específica del contenido (máx 12 palabras)"}", "${input.language === "en" ? "Pain point or opportunity (concise)" : "Pain point u oportunidad (conciso)"}", "${input.language === "en" ? "Why this matters now (direct, brief)" : "Por qué importa ahora (directo, breve)"}"],
+      "visual_direction": "${input.language === "en" ? "Highlight the problem visually. Use contrast and emphasis." : "Destaca el problema visualmente. Usa contraste y énfasis."}"
     }
   ],
   "post_copies": [
@@ -505,17 +583,19 @@ ${input.language === "en" ? "REQUIRED JSON FORMAT:" : "FORMATO JSON REQUERIDO:"}
   "schedule_suggestions": ["${input.language === "en" ? "Tuesday 10:00 AM EST" : "Martes 10:00 -06:00"}", "${input.language === "en" ? "Thursday 2:00 PM EST" : "Jueves 14:00 -06:00"}"]
 }
 
-${input.language === "en" ? "QUALITY CRITERIA:" : "CRITERIOS DE CALIDAD:"}
-- ${input.language === "en" ? "Each slide: compelling title + 3-5 specific, actionable bullets BASED ON SOURCE CONTENT" : "Cada slide: título convincente + 3-5 bullets específicos y accionables BASADOS EN EL CONTENIDO FUENTE"}
-- ${input.language === "en" ? "Use concrete numbers and data FROM THE SOURCE, not invented statistics" : "Usa números concretos y datos DEL CONTENIDO FUENTE, no estadísticas inventadas"}
-- ${input.language === "en" ? "Adapt post_copies significantly by audience (not just minor tweaks)" : "Adapta post_copies significativamente por audiencia (no solo ajustes menores)"}
-- ${input.language === "en" ? "Hashtags: mix of niche industry terms and broader trending topics" : "Hashtags: mezcla de términos de nicho de la industria y temas trending más amplios"}
-- ${input.language === "en" ? "Schedule: optimal LinkedIn posting times based on audience timezone" : "Horarios: tiempos óptimos de publicación en LinkedIn según zona horaria de audiencia"}
+${input.language === "en" ? "QUALITY CRITERIA FOR SQUARE FORMAT (1080x1080):" : "CRITERIOS DE CALIDAD PARA FORMATO CUADRADO (1080x1080):"}
+- ${input.language === "en" ? "TITLES: Max 2 lines (~50 characters). Compelling and specific, not generic" : "TÍTULOS: Máx 2 líneas (~50 caracteres). Convincentes y específicos, no genéricos"}
+- ${input.language === "en" ? "BULLETS: 3-4 bullets per slide, max 12 words EACH. Every word must add value" : "BULLETS: 3-4 bullets por slide, máx 12 palabras CADA UNO. Cada palabra debe agregar valor"}
+- ${input.language === "en" ? "DATA: Use concrete numbers/metrics FROM SOURCE ONLY, not invented statistics" : "DATOS: Usa números/métricas concretos SOLO DEL CONTENIDO FUENTE, no estadísticas inventadas"}
+- ${input.language === "en" ? "SCANNABILITY: Text must be scannable at a glance - use action verbs and short chunks" : "ESCANIBILIDAD: El texto debe ser escaneable de un vistazo - usa verbos de acción y fragmentos cortos"}
+- ${input.language === "en" ? "AUDIENCE COPIES: SIGNIFICANTLY different by audience - different angle, different CTA, different focus" : "COPYS POR AUDIENCIA: SIGNIFICATIVAMENTE diferente por audiencia - ángulo diferente, CTA diferente, enfoque diferente"}
+- ${input.language === "en" ? "Hashtags: Mix niche industry terms (3) with broader topics (2) - total max 5 hashtags" : "Hashtags: Mezcla términos de nicho (3) con temas más amplios (2) - máx 5 hashtags totales"}
+- ${input.language === "en" ? "Schedule: Optimal LinkedIn times based on audience timezone and engagement patterns" : "Horarios: Tiempos óptimos de LinkedIn según zona horaria de audiencia y patrones de engagement"}
 
 ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no explanations, just the JSON object:" : "Responde SOLO con el JSON válido. Sin markdown, sin explicaciones, solo el objeto JSON:"}`
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: geminiModel,
         contents: prompt,
         config: {
           temperature: 0.7,
@@ -523,7 +603,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
         },
       })
 
-      console.log("[v0] Response received from Gemini 2.5 Pro")
+      console.log("[v0] Response received from", geminiModel)
 
       if (response.candidates?.[0]?.finishReason === "MAX_TOKENS") {
         throw new Error(
@@ -576,7 +656,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
       setSlidesData(payload.slides)
 
       console.log("[v0] Rendering carousel HTML...")
-      const html = renderCarouselHTML(payload.slides, input.templateId)
+      const html = renderCarouselHTML(payload.slides, input.templateId, fontScale)
 
       setGeneration({
         htmlPreview: html,
@@ -618,13 +698,12 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
     navigator.clipboard.writeText(text)
   }
 
-  const downloadImages = async () => {
+  const downloadImagesWithHTMLToImage = async () => {
     if (!generation.htmlPreview) return
 
     try {
-      console.log("[v0] Starting image download process...")
+      console.log("[v0] Starting JPEG export (html-to-image)...")
 
-      // Create a temporary iframe to render the full HTML with styles
       const iframe = document.createElement("iframe")
       iframe.style.position = "fixed"
       iframe.style.left = "-9999px"
@@ -632,14 +711,14 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
       iframe.style.width = "1080px"
       iframe.style.height = "1080px"
       iframe.style.border = "none"
+      iframe.style.visibility = "visible"
       document.body.appendChild(iframe)
 
-      // Write the full HTML to the iframe
       iframe.contentDocument?.open()
       iframe.contentDocument?.write(generation.htmlPreview)
       iframe.contentDocument?.close()
 
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 3500))
 
       const iframeDoc = iframe.contentDocument
       if (!iframeDoc) {
@@ -647,7 +726,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
       }
 
       const slides = iframeDoc.querySelectorAll(".slide")
-      console.log("[v0] Found", slides.length, "slides to download")
+      console.log("[v0] Found", slides.length, "slides")
 
       if (slides.length === 0) {
         throw new Error("No se encontraron slides para descargar")
@@ -655,49 +734,136 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
 
       for (let i = 0; i < slides.length; i++) {
         const slide = slides[i] as HTMLElement
+        console.log(`[v0] Rendering slide ${i + 1}/${slides.length} with html-to-image...`)
 
-        console.log(`[v0] Capturing slide ${i + 1}/${slides.length}...`)
+        try {
+          const dataUrl = await toJpeg(slide, {
+            width: 1080,
+            height: 1080,
+            pixelRatio: 3,
+            quality: 0.95,
+            backgroundColor: "#0B0B0E",
+          })
+
+          const link = document.createElement("a")
+          link.download = `carousel-slide-${i + 1}.jpg`
+          link.href = dataUrl
+          link.click()
+
+          console.log(`[v0] Slide ${i + 1} exported with html-to-image`)
+        } catch (slideError) {
+          console.error(`[v0] Error exporting slide ${i + 1}:`, slideError)
+          throw new Error(`No se pudo exportar slide ${i + 1}`)
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+
+      document.body.removeChild(iframe)
+      console.log("[v0] All slides exported successfully with html-to-image (1080x1350)")
+    } catch (error) {
+      console.error("[v0] html-to-image export error:", error)
+      setError(
+        error instanceof Error
+          ? `Error al descargar con html-to-image: ${error.message}`
+          : "Error al descargar las imágenes. Intenta de nuevo.",
+      )
+    }
+  }
+
+  const downloadImagesWithHTML2Canvas = async () => {
+    if (!generation.htmlPreview) return
+
+    try {
+      console.log("[v0] Starting JPEG export (html2canvas)...")
+
+      const iframe = document.createElement("iframe")
+      iframe.style.position = "fixed"
+      iframe.style.left = "-9999px"
+      iframe.style.top = "0"
+      iframe.style.width = "1080px"
+      iframe.style.height = "1080px"
+      iframe.style.border = "none"
+      iframe.style.visibility = "visible"
+      document.body.appendChild(iframe)
+
+      iframe.contentDocument?.open()
+      iframe.contentDocument?.write(generation.htmlPreview)
+      iframe.contentDocument?.close()
+
+      await new Promise((resolve) => setTimeout(resolve, 3500))
+
+      const iframeDoc = iframe.contentDocument
+      if (!iframeDoc) {
+        throw new Error("No se pudo acceder al contenido del iframe")
+      }
+
+      const slides = iframeDoc.querySelectorAll(".slide")
+      console.log("[v0] Found", slides.length, "slides")
+
+      if (slides.length === 0) {
+        throw new Error("No se encontraron slides para descargar")
+      }
+
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i] as HTMLElement
+        console.log(`[v0] Rendering slide ${i + 1}/${slides.length} to JPEG...`)
 
         const canvas = await html2canvas(slide, {
           width: 1080,
           height: 1080,
-          scale: 2, // Higher scale for better quality
+          scale: 3,
           backgroundColor: "#0B0B0E",
           logging: false,
           useCORS: true,
           allowTaint: true,
+          windowHeight: 1080,
+          windowWidth: 1080,
         })
 
-        // Convert to blob and download
         await new Promise<void>((resolve, reject) => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob)
-              const link = document.createElement("a")
-              link.download = `carousel-slide-${i + 1}.png`
-              link.href = url
-              link.click()
-              URL.revokeObjectURL(url)
-              console.log(`[v0] Downloaded slide ${i + 1}`)
-              resolve()
-            } else {
-              reject(new Error(`Failed to create blob for slide ${i + 1}`))
-            }
-          }, "image/png")
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob)
+                const link = document.createElement("a")
+                link.download = `carousel-slide-${i + 1}.jpg`
+                link.href = url
+                link.click()
+                URL.revokeObjectURL(url)
+                console.log(`[v0] Slide ${i + 1} exported: ${(blob.size / 1024).toFixed(2)}KB`)
+                resolve()
+              } else {
+                reject(new Error(`Failed to export slide ${i + 1}`))
+              }
+            },
+            "image/jpeg",
+            0.95,
+          )
         })
 
-        await new Promise((resolve) => setTimeout(resolve, 800))
+        await new Promise((resolve) => setTimeout(resolve, 500))
       }
 
       document.body.removeChild(iframe)
-      console.log("[v0] All images downloaded successfully!")
+      console.log("[v0] All slides exported successfully as JPEG (1080x1350)")
     } catch (error) {
-      console.error("[v0] Error downloading images:", error)
+      console.error("[v0] html2canvas export error:", error)
       setError(
         error instanceof Error
           ? `Error al descargar las imágenes: ${error.message}`
           : "Error al descargar las imágenes. Intenta de nuevo.",
       )
+    }
+  }
+
+  const downloadImages = async () => {
+    const exportEngine = localStorage.getItem("exportEngine") || "html2canvas"
+
+    if (exportEngine === "html-to-image") {
+      await downloadImagesWithHTMLToImage()
+    } else {
+      await downloadImagesWithHTML2Canvas()
     }
   }
 
@@ -713,6 +879,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
           </p>
         </div>
 
+        {mounted && (
         <div className="space-y-6">
           {/* Input Form - Full Width */}
           <Card className="border-border bg-card">
@@ -949,6 +1116,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
                     ))}
                   </div>
                 </div>
+
               </div>
 
               <Separator className="bg-border" />
@@ -1223,18 +1391,67 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="overflow-hidden rounded-lg border-2 border-border bg-background shadow-xl">
-                      <iframe
-                        srcDoc={generation.htmlPreview}
-                        className="aspect-square w-full"
-                        title="Carousel Preview"
-                        style={{ minHeight: "600px" }}
+                    <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-foreground">Escala de Fuente</Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-primary">{fontScale.toFixed(2)}x</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={applyAutoScale}
+                            className="h-7 px-3 text-xs"
+                            disabled={slidesData.length === 0}
+                          >
+                            Auto
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFontScale(1.0)}
+                            className="h-7 px-3 text-xs"
+                          >
+                            Reset
+                          </Button>
+                        </div>
+                      </div>
+                      <Slider
+                        value={[fontScale]}
+                        onValueChange={(v) => setFontScale(v[0])}
+                        min={0.5}
+                        max={2.5}
+                        step={0.05}
+                        className="w-full"
                       />
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>0.5x - Muy pequeño</span>
+                        <span>1.0x - Normal</span>
+                        <span>2.5x - Muy grande</span>
+                      </div>
                     </div>
+                    <div className="flex justify-center">
+                      <div className="rounded-lg border-2 border-border bg-background shadow-xl overflow-hidden" style={{ aspectRatio: "1/1", maxWidth: "550px", width: "100%", position: "relative" }}>
+                        <iframe
+                          srcDoc={generation.htmlPreview}
+                          style={{
+                            width: "1080px",
+                            height: "1080px",
+                            transform: "scale(0.509)",
+                            transformOrigin: "0 0",
+                            border: "none",
+                          }}
+                          title="Carousel Preview"
+                          frameBorder="0"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Preview (escalado) • Descarga: 1080×1080px JPEG (Cuadrado)
+                    </p>
                     <div className="flex gap-2">
                       <Button variant="outline" className="flex-1 bg-transparent" size="sm" onClick={downloadImages}>
                         <Download className="mr-2 h-4 w-4" />
-                        Descargar Imágenes (1080x1080 PNG)
+                        Descargar Imágenes (1080x1080 JPEG)
                       </Button>
                     </div>
 
@@ -1389,6 +1606,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
             </div>
           )}
         </div>
+        )}
       </main>
     </div>
   )
