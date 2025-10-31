@@ -1,10 +1,15 @@
 export interface GenerationInput {
   sourceText: string
   sourceUrls: string[]
-  templateId: "template-a" | "template-b" | "template-c"
-  audienceModes: ("finance" | "tech" | "exec")[]
+  templateId: "template-a" | "template-b" | "template-c" | "template-d" | "template-e"
+  audienceModes: ("finance" | "tech" | "exec" | "managers")[]
   slideCount: number
   language: "es" | "en"
+  technicalDepth: "basic" | "intermediate" | "advanced"
+  tone: "formal" | "conversational" | "inspirational" | "educational"
+  copyLength: "short" | "long"
+  objective: string
+  requiredKeywords: string[]
 }
 
 export interface Slide {

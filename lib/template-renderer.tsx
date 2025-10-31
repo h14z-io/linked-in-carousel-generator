@@ -1,6 +1,221 @@
 import type { Slide } from "./types"
 
+// Lucide icon SVGs as strings
+const ICONS = {
+  trendingUp: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+  barChart: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>`,
+  target: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  zap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  lightbulb: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+  rocket: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+  sparkles: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
+  checkCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  arrowRight: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+}
+
+function getIconForSlide(templateId: string, slideIndex: number, totalSlides: number): string {
+  if (templateId === "template-d") {
+    // Data-driven icons
+    const dataIcons = [ICONS.target, ICONS.barChart, ICONS.trendingUp, ICONS.checkCircle, ICONS.zap]
+    return dataIcons[slideIndex % dataIcons.length]
+  } else if (templateId === "template-e") {
+    // Storytelling icons
+    const storyIcons = [ICONS.lightbulb, ICONS.sparkles, ICONS.rocket, ICONS.checkCircle, ICONS.arrowRight]
+    return storyIcons[slideIndex % storyIcons.length]
+  } else if (templateId === "template-b") {
+    // Bold magenta - use accent icons
+    return ICONS.zap
+  } else if (templateId === "template-c") {
+    // Editorial - subtle icons
+    return ICONS.checkCircle
+  } else {
+    // Minimal - very subtle
+    return ICONS.checkCircle
+  }
+}
+
 export function renderCarouselHTML(slides: Slide[], templateId: string): string {
+  const templateStyles = {
+    "template-a": `
+      /* Template A - Minimal Tech */
+      .slide {
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      }
+      .slide-number {
+        background: linear-gradient(135deg, #BB2649, #D63E6E);
+      }
+      .slide-icon {
+        opacity: 0.3;
+        width: 20px;
+        height: 20px;
+        color: var(--pri);
+      }
+    `,
+    "template-b": `
+      /* Template B - Bold Magenta (Improved) */
+      .slide {
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--pri);
+        box-shadow: 0 8px 30px rgba(187, 38, 73, 0.15), 0 0 0 1px rgba(187, 38, 73, 0.05);
+      }
+      .slide-number {
+        background: linear-gradient(135deg, #BB2649, #FF1744);
+        text-shadow: 0 2px 8px rgba(187, 38, 73, 0.3);
+      }
+      .title {
+        color: var(--txt);
+        position: relative;
+      }
+      .title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--pri), transparent);
+      }
+      .bullets div::before {
+        font-size: 24px;
+      }
+      .slide-icon {
+        width: 28px;
+        height: 28px;
+        color: var(--pri);
+        filter: drop-shadow(0 2px 4px rgba(187, 38, 73, 0.3));
+      }
+    `,
+    "template-c": `
+      /* Template C - Editorial Grid */
+      .slide {
+        border-left: 6px solid var(--pri);
+        border-top: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        box-shadow: -4px 0 20px rgba(187, 38, 73, 0.15), 0 4px 20px rgba(0, 0, 0, 0.25);
+      }
+      .title {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-style: italic;
+      }
+      .slide-icon {
+        width: 24px;
+        height: 24px;
+        color: var(--pri);
+        opacity: 0.6;
+      }
+    `,
+    "template-d": `
+      /* Template D - Data-Driven (Redesigned) */
+      .slide {
+        border: 2px solid var(--border);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(135deg, var(--surf) 0%, rgba(187, 38, 73, 0.03) 100%);
+      }
+      .slide-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+      .slide-number {
+        background: var(--pri);
+        font-size: 32px;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(187, 38, 73, 0.25);
+      }
+      .slide-icon {
+        width: 40px;
+        height: 40px;
+        color: var(--pri);
+        background: rgba(187, 38, 73, 0.1);
+        padding: 8px;
+        border-radius: 8px;
+      }
+      .title {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+      .bullets div {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--txt);
+        line-height: 1.6;
+      }
+      .bullets div::before {
+        content: '▸';
+        color: var(--pri);
+        font-size: 18px;
+        font-weight: 700;
+      }
+    `,
+    "template-e": `
+      /* Template E - Storytelling */
+      .slide {
+        border: none;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(180deg, var(--surf) 0%, rgba(11, 11, 14, 0.95) 100%);
+        position: relative;
+        overflow: hidden;
+      }
+      .slide::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--pri), #FF1744, var(--pri));
+      }
+      .slide-number {
+        background: transparent;
+        color: var(--pri);
+        font-size: 24px;
+        font-weight: 700;
+        opacity: 0.6;
+      }
+      .slide-icon {
+        width: 48px;
+        height: 48px;
+        color: var(--pri);
+        opacity: 0.8;
+        margin-bottom: 16px;
+      }
+      .title {
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-top: 16px;
+        background: linear-gradient(135deg, var(--txt), var(--mut));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .bullets {
+        font-size: 19px;
+        line-height: 1.9;
+        color: var(--mut);
+      }
+      .bullets div::before {
+        content: '→';
+        color: var(--pri);
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .footer {
+        border-top: 1px solid rgba(187, 38, 73, 0.2);
+      }
+    `,
+  }
+
+  const selectedTemplateStyle =
+    templateStyles[templateId as keyof typeof templateStyles] || templateStyles["template-a"]
+
   const baseStyles = `
     <style>
       :root {
@@ -30,14 +245,12 @@ export function renderCarouselHTML(slides: Slide[], templateId: string): string 
       }
       .slide {
         background: var(--surf);
-        border: 1px solid var(--border);
         border-radius: 18px;
         padding: 48px;
         min-height: 600px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
       }
       .slide-header {
         display: flex;
@@ -48,7 +261,6 @@ export function renderCarouselHTML(slides: Slide[], templateId: string): string 
       .slide-number {
         font-size: 48px;
         font-weight: 800;
-        background: linear-gradient(135deg, #BB2649, #E83E8C);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -93,7 +305,6 @@ export function renderCarouselHTML(slides: Slide[], templateId: string): string 
         font-weight: 700;
         color: var(--pri);
       }
-      /* Updated branding text with H14Z styling */
       .branding {
         font-weight: 400;
         color: var(--txt);
@@ -102,6 +313,8 @@ export function renderCarouselHTML(slides: Slide[], templateId: string): string 
         color: var(--pri);
         font-weight: 700;
       }
+      
+      ${selectedTemplateStyle}
     </style>
   `
 
@@ -112,7 +325,9 @@ export function renderCarouselHTML(slides: Slide[], templateId: string): string 
       <div>
         <div class="slide-header">
           <span class="slide-number">${String(i + 1).padStart(2, "0")}</span>
+          ${templateId === "template-d" || templateId === "template-e" ? `<div class="slide-icon">${getIconForSlide(templateId, i, slides.length)}</div>` : ""}
         </div>
+        ${templateId !== "template-d" && templateId !== "template-e" && (templateId === "template-b" || templateId === "template-c") ? `<div class="slide-icon" style="margin-bottom: 16px;">${getIconForSlide(templateId, i, slides.length)}</div>` : ""}
         <h2 class="title">${s.title || ""}</h2>
         <div class="bullets">
           ${(s.bullets || []).map((b) => `<div>${b}</div>`).join("")}
