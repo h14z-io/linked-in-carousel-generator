@@ -90,8 +90,26 @@ export default function V2Page() {
         throw new Error("Invalid narrative style selected")
       }
 
-      // Get template image path
-      const templateImage = theme === "dark" ? style.templateImage.dark : style.templateImage.light
+      // Get template image path - check for custom template first
+      let templateImage: string
+      const customTemplates = localStorage.getItem("customTemplates")
+      if (customTemplates) {
+        try {
+          const templates = JSON.parse(customTemplates)
+          const customTemplate = templates[narrativeStyle]?.[theme]
+          if (customTemplate) {
+            console.log("[v2] Using custom template for", narrativeStyle, theme)
+            templateImage = customTemplate // Already base64 with data:image prefix
+          } else {
+            templateImage = theme === "dark" ? style.templateImage.dark : style.templateImage.light
+          }
+        } catch (e) {
+          console.error("[v2] Error loading custom templates:", e)
+          templateImage = theme === "dark" ? style.templateImage.dark : style.templateImage.light
+        }
+      } else {
+        templateImage = theme === "dark" ? style.templateImage.dark : style.templateImage.light
+      }
 
       // Generate with AI
       const response = await generateCarouselNodes({

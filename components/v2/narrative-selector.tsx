@@ -1,8 +1,14 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { NARRATIVE_STYLES } from "@/lib/v2/templates/narrative-definitions"
-import { Check } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface NarrativeSelectorProps {
   selected: string
@@ -10,43 +16,52 @@ interface NarrativeSelectorProps {
 }
 
 export function NarrativeSelector({ selected, onSelect }: NarrativeSelectorProps) {
+  const selectedStyle = NARRATIVE_STYLES.find((s) => s.id === selected)
+
   return (
-    <div className="grid gap-4 sm:gap-5">
-      {NARRATIVE_STYLES.map((style) => (
-        <div
-          key={style.id}
-          className={`relative cursor-pointer rounded-xl p-5 sm:p-6 border-2 transition-smooth min-h-[120px] ${
-            selected === style.id
-              ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-              : "border-border/50 bg-card/30 hover:border-primary/50 hover:bg-card/50"
-          }`}
-          onClick={() => onSelect(style.id)}
-        >
-          <div className="flex items-start justify-between gap-4">
+    <div className="space-y-4">
+      {/* Compact selector */}
+      <Select value={selected} onValueChange={onSelect}>
+        <SelectTrigger className="h-14 text-base font-semibold">
+          <SelectValue placeholder="Select a narrative framework" />
+        </SelectTrigger>
+        <SelectContent>
+          {NARRATIVE_STYLES.map((style) => (
+            <SelectItem key={style.id} value={style.id} className="py-3">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{style.name}</span>
+                <span className="text-xs text-muted-foreground">• {style.slideCount} slides</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Details card - only shown when selected */}
+      {selectedStyle && (
+        <div className="glass rounded-xl p-5 border-2 border-primary/20 animate-in">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Check className="w-4 h-4 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-base sm:text-lg font-bold truncate">{style.name}</h3>
-                {selected === style.id && (
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center animate-in">
-                    <Check className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{style.subtitle}</p>
-              <div className="space-y-1.5">
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground/90">Best for:</span> {style.bestFor}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground/90">{style.framework}</span>
-                  <span>•</span>
-                  <span>{style.slideCount} slides</span>
-                </div>
-              </div>
+              <h4 className="font-bold text-base mb-1">{selectedStyle.name}</h4>
+              <p className="text-sm text-muted-foreground">{selectedStyle.subtitle}</p>
+            </div>
+          </div>
+          <div className="space-y-2 pl-11">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">Best for:</span>
+              <span className="text-sm text-muted-foreground">{selectedStyle.bestFor}</span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground/80">{selectedStyle.framework}</span>
+              <span>•</span>
+              <span>{selectedStyle.slideCount} slides</span>
             </div>
           </div>
         </div>
-      ))}
+      )}
     </div>
   )
 }

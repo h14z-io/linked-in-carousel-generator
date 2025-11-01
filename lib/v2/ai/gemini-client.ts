@@ -94,11 +94,20 @@ export async function generateCarouselNodes(
 }
 
 /**
- * Load template image from public folder and convert to base64
+ * Load template image from public folder or custom base64 and convert to base64
  */
 async function loadTemplateAsBase64(templatePath: string): Promise<string> {
   try {
-    // Fetch image from public folder
+    // Check if it's already a base64 data URL (custom template)
+    if (templatePath.startsWith("data:image")) {
+      console.log("[Template] Using custom base64 template")
+      // Remove data URL prefix (data:image/png;base64,)
+      const base64Data = templatePath.split(",")[1]
+      return base64Data
+    }
+
+    // Fetch image from public folder (default template)
+    console.log("[Template] Fetching default template from:", templatePath)
     const response = await fetch(templatePath)
 
     if (!response.ok) {
