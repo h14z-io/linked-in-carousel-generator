@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,8 @@ import { fetchMultipleUrls } from "@/lib/fetch-url-content"
 import type { Slide, ThemeMode } from "@/lib/v2/types"
 
 export default function V2Page() {
+  const router = useRouter()
+
   // State
   const [narrativeStyle, setNarrativeStyle] = useState("pasp")
   const [sourceText, setSourceText] = useState("")
@@ -123,15 +126,20 @@ export default function V2Page() {
   }
 
   const handleEditSlide = (slideIndex: number) => {
-    // TODO: Phase 3 - Open canvas editor
-    console.log("[v2] Edit slide:", slideIndex)
-    alert(`Canvas editor will be implemented in Phase 3. Editing slide ${slideIndex + 1}`)
+    const slide = slides[slideIndex]
+    if (!slide) return
+
+    // Store slides in sessionStorage for editor access
+    sessionStorage.setItem("v2_slides", JSON.stringify(slides))
+
+    // Navigate to editor
+    router.push(`/v2/editor/${slide.id}`)
   }
 
   const handleViewSlide = (slideIndex: number) => {
-    // TODO: Phase 3 - Open preview modal
+    // TODO: Phase 4 - Implement preview modal
     console.log("[v2] View slide:", slideIndex)
-    alert(`Preview modal will be implemented in Phase 3. Viewing slide ${slideIndex + 1}`)
+    alert(`Full preview modal will be implemented in Phase 4. Viewing slide ${slideIndex + 1}`)
   }
 
   return (
@@ -203,12 +211,7 @@ export default function V2Page() {
             </Card>
 
             {/* Generate Button */}
-            <Button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              size="lg"
-              className="w-full"
-            >
+            <Button onClick={handleGenerate} disabled={isGenerating} size="lg" className="w-full">
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
