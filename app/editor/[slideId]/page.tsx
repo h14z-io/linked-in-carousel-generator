@@ -79,76 +79,74 @@ export default function EditorPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="h-9">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Edit Slide</h1>
-              <p className="text-sm text-muted-foreground">Slide ID: {slideId}</p>
+              <h1 className="text-xl sm:text-2xl font-bold">Canvas Editor</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Full drag-and-drop editing</p>
             </div>
           </div>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} className="h-10 sm:h-11 font-semibold shadow-md">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-[1fr_380px]">
           {/* Canvas Area */}
-          <div>
-            <Card className="p-6">
-              <div className="flex items-center justify-center">
-                <CanvasEditor
-                  slide={slide}
-                  onNodesUpdate={handleNodesUpdate}
-                  gridEnabled={true}
-                  snapEnabled={true}
-                />
-              </div>
-            </Card>
+          <div className="glass rounded-2xl p-4 sm:p-8 transition-smooth">
+            <div className="flex items-center justify-center">
+              <CanvasEditor
+                slide={slide}
+                onNodesUpdate={handleNodesUpdate}
+                gridEnabled={true}
+                snapEnabled={true}
+              />
+            </div>
           </div>
 
-          {/* Toolbar Area */}
-          <div>
-            <Card>
+          {/* Toolbar Area - Sticky on desktop */}
+          <div className="lg:sticky lg:top-8 lg:self-start space-y-6">
+            <div className="glass rounded-2xl overflow-hidden transition-smooth">
               <Tabs defaultValue="text">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="text">Text</TabsTrigger>
-                  <TabsTrigger value="align">Align</TabsTrigger>
-                  <TabsTrigger value="add">Add</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 rounded-none h-12">
+                  <TabsTrigger value="text" className="text-sm sm:text-base">Text</TabsTrigger>
+                  <TabsTrigger value="align" className="text-sm sm:text-base">Align</TabsTrigger>
+                  <TabsTrigger value="add" className="text-sm sm:text-base">Add</TabsTrigger>
                 </TabsList>
-                <TabsContent value="text">
+                <TabsContent value="text" className="m-0">
                   <TextToolbar />
                 </TabsContent>
-                <TabsContent value="align">
+                <TabsContent value="align" className="m-0">
                   <AlignToolbar />
                 </TabsContent>
-                <TabsContent value="add">
+                <TabsContent value="add" className="m-0">
                   <AddToolbar />
                 </TabsContent>
               </Tabs>
-            </Card>
+            </div>
 
             {/* Quick Actions */}
-            <Card className="mt-4 p-4">
-              <div className="text-sm font-medium mb-3">Quick Actions</div>
-              <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full justify-start">
+            <div className="glass rounded-2xl p-5 transition-smooth">
+              <div className="text-sm font-semibold mb-4">Quick Actions</div>
+              <div className="space-y-2.5">
+                <Button variant="outline" size="sm" className="w-full justify-start h-10">
                   Undo (Ctrl+Z)
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button variant="outline" size="sm" className="w-full justify-start h-10">
                   Redo (Ctrl+Shift+Z)
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button variant="outline" size="sm" className="w-full justify-start h-10">
                   Reset to Original
                 </Button>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </main>

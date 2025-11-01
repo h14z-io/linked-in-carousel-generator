@@ -174,157 +174,167 @@ export default function V2Page() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">LinkedIn Carousel Generator</h1>
-          <p className="text-muted-foreground">
-            AI-powered canvas editor with multimodal generation. Choose your narrative framework and
-            let AI create professional carousels.
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 max-w-7xl">
+        {/* Hero Section - Modern, Spacious */}
+        <div className="mb-12 sm:mb-16 text-center max-w-3xl mx-auto animate-in">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+            LinkedIn Carousel Studio
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            AI-powered canvas editor with multimodal generation.
+            <br className="hidden sm:block" />
+            Choose your narrative framework and create professional carousels in seconds.
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="mb-8 max-w-3xl mx-auto glass">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[1fr_500px]">
           {/* Left Column: Configuration */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Narrative Style Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>1. Select Narrative Framework</CardTitle>
-                <CardDescription>
+            <div className="glass rounded-2xl p-6 sm:p-8 glass-hover transition-smooth">
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl font-bold text-primary">1</span>
+                  <h2 className="text-xl sm:text-2xl font-bold">Narrative Framework</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
                   Choose the storytelling framework that best fits your goal
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <NarrativeSelector selected={narrativeStyle} onSelect={setNarrativeStyle} />
-              </CardContent>
-            </Card>
+                </p>
+              </div>
+              <NarrativeSelector selected={narrativeStyle} onSelect={setNarrativeStyle} />
+            </div>
 
             {/* Content & Configuration */}
-            <Card>
-              <CardHeader>
-                <CardTitle>2. Content & Configuration</CardTitle>
-                <CardDescription>
-                  Provide source material and customize generation settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AIControls
-                  sourceText={sourceText}
-                  onSourceTextChange={setSourceText}
-                  sourceUrls={sourceUrls}
-                  onSourceUrlsChange={setSourceUrls}
-                  language={language}
-                  onLanguageChange={setLanguage}
-                  technicalDepth={technicalDepth}
-                  onTechnicalDepthChange={setTechnicalDepth}
-                  tone={tone}
-                  onToneChange={setTone}
-                  audience={audience}
-                  onAudienceChange={setAudience}
-                  objective={objective}
-                  onObjectiveChange={setObjective}
-                  requiredKeywords={requiredKeywords}
-                  onRequiredKeywordsChange={setRequiredKeywords}
-                  theme={theme}
-                  onThemeChange={setTheme}
-                />
-              </CardContent>
-            </Card>
+            <div className="glass rounded-2xl p-6 sm:p-8 glass-hover transition-smooth">
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl font-bold text-primary">2</span>
+                  <h2 className="text-xl sm:text-2xl font-bold">Content & Settings</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Provide source material and customize generation
+                </p>
+              </div>
+              <AIControls
+                sourceText={sourceText}
+                onSourceTextChange={setSourceText}
+                sourceUrls={sourceUrls}
+                onSourceUrlsChange={setSourceUrls}
+                language={language}
+                onLanguageChange={setLanguage}
+                technicalDepth={technicalDepth}
+                onTechnicalDepthChange={setTechnicalDepth}
+                tone={tone}
+                onToneChange={setTone}
+                audience={audience}
+                onAudienceChange={setAudience}
+                objective={objective}
+                onObjectiveChange={setObjective}
+                requiredKeywords={requiredKeywords}
+                onRequiredKeywordsChange={setRequiredKeywords}
+                theme={theme}
+                onThemeChange={setTheme}
+              />
+            </div>
 
-            {/* Generate Button */}
-            <Button onClick={handleGenerate} disabled={isGenerating} size="lg" className="w-full">
+            {/* Generate Button - Prominent CTA */}
+            <Button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              size="lg"
+              className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-smooth"
+            >
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                   Generating with AI...
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-5 w-5" />
+                  <Sparkles className="mr-2 h-6 w-6" />
                   Generate Carousel
                 </>
               )}
             </Button>
           </div>
 
-          {/* Right Column: Preview */}
-          <div className="space-y-6">
+          {/* Right Column: Preview - Sticky on desktop */}
+          <div className="space-y-8 lg:sticky lg:top-8 lg:self-start">
             {/* Slides Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle>3. Preview & Edit</CardTitle>
-                <CardDescription>
+            <div className="glass rounded-2xl p-6 sm:p-8 glass-hover transition-smooth">
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl font-bold text-primary">3</span>
+                  <h2 className="text-xl sm:text-2xl font-bold">Preview & Edit</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
                   {slides.length > 0
                     ? `${slides.length} slides generated. Click to edit in canvas.`
                     : "Your slides will appear here after generation"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SlidePreview slides={slides} onEdit={handleEditSlide} onView={handleViewSlide} />
-                {slides.length > 0 && (
-                  <div className="mt-4">
-                    <Button
-                      onClick={handleExport}
-                      disabled={isExporting}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {isExporting ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Exporting... {exportProgress}%
-                        </>
-                      ) : (
-                        <>
-                          <Download className="mr-2 h-5 w-5" />
-                          Download All Slides (JPEG)
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center mt-2">
-                      1080x1080px • JPEG • Quality 95%
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </p>
+              </div>
+              <SlidePreview slides={slides} onEdit={handleEditSlide} onView={handleViewSlide} />
+              {slides.length > 0 && (
+                <div className="mt-6">
+                  <Button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className="w-full h-12 font-semibold shadow-md hover:shadow-lg transition-smooth"
+                    size="lg"
+                  >
+                    {isExporting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Exporting... {exportProgress}%
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-5 w-5" />
+                        Download All Slides
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-3">
+                    1080x1080px • JPEG • Quality 95%
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Post Copy */}
             {postCopy && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>LinkedIn Post Copy</CardTitle>
-                  <CardDescription>AI-generated copy to accompany your carousel</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="whitespace-pre-wrap text-sm bg-muted p-4 rounded-md">
-                    {postCopy}
-                  </div>
-                  {hashtags.length > 0 && (
-                    <>
-                      <Separator className="my-4" />
-                      <div className="flex flex-wrap gap-2">
-                        {hashtags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="text-sm bg-primary/10 text-primary px-2 py-1 rounded"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="glass rounded-2xl p-6 sm:p-8 glass-hover transition-smooth animate-in">
+                <h3 className="text-lg font-bold mb-2">LinkedIn Post Copy</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  AI-generated copy to accompany your carousel
+                </p>
+                <div className="whitespace-pre-wrap text-sm bg-muted/50 p-4 rounded-xl leading-relaxed">
+                  {postCopy}
+                </div>
+                {hashtags.length > 0 && (
+                  <>
+                    <Separator className="my-4" />
+                    <div className="flex flex-wrap gap-2">
+                      {hashtags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>

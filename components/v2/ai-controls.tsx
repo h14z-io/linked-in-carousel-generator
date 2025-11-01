@@ -116,70 +116,79 @@ export function AIControls({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8">
       {/* Source Content */}
-      <div className="space-y-2">
-        <Label>Source Text</Label>
+      <div className="space-y-3">
+        <Label className="text-base font-semibold">Source Text</Label>
         <Textarea
           placeholder="Paste your source content here..."
           value={sourceText}
           onChange={(e) => onSourceTextChange(e.target.value)}
           rows={6}
+          className="resize-none text-base"
         />
       </div>
 
       {/* Source URLs */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Source URLs</Label>
-          <Button size="sm" variant="outline" onClick={addUrl}>
-            <Plus className="w-4 h-4 mr-1" />
+          <Label className="text-base font-semibold">Source URLs</Label>
+          <Button size="sm" variant="outline" onClick={addUrl} className="h-9">
+            <Plus className="w-4 h-4 mr-1.5" />
             Add URL
           </Button>
         </div>
-        {sourceUrls.map((url, index) => (
-          <div key={index} className="flex gap-2">
-            <Input
-              placeholder="https://example.com/article"
-              value={url}
-              onChange={(e) => updateUrl(index, e.target.value)}
-            />
-            <Button size="icon" variant="ghost" onClick={() => removeUrl(index)}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
+        <div className="space-y-2.5">
+          {sourceUrls.map((url, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                placeholder="https://example.com/article"
+                value={url}
+                onChange={(e) => updateUrl(index, e.target.value)}
+                className="h-11 text-base"
+              />
+              <Button size="icon" variant="ghost" onClick={() => removeUrl(index)} className="h-11 w-11 flex-shrink-0">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Required Keywords */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Required Keywords (Optional)</Label>
-          <Button size="sm" variant="outline" onClick={addKeyword}>
-            <Plus className="w-4 h-4 mr-1" />
-            Add Keyword
+          <Label className="text-base font-semibold">Required Keywords <span className="text-sm font-normal text-muted-foreground">(Optional)</span></Label>
+          <Button size="sm" variant="outline" onClick={addKeyword} className="h-9">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add
           </Button>
         </div>
-        {requiredKeywords.map((keyword, index) => (
-          <div key={index} className="flex gap-2">
-            <Input
-              placeholder="e.g. automation, AI, cloud"
-              value={keyword}
-              onChange={(e) => updateKeyword(index, e.target.value)}
-            />
-            <Button size="icon" variant="ghost" onClick={() => removeKeyword(index)}>
-              <X className="w-4 h-4" />
-            </Button>
+        {requiredKeywords.length > 0 && (
+          <div className="space-y-2.5">
+            {requiredKeywords.map((keyword, index) => (
+              <div key={index} className="flex gap-2">
+                <Input
+                  placeholder="e.g. automation, AI, cloud"
+                  value={keyword}
+                  onChange={(e) => updateKeyword(index, e.target.value)}
+                  className="h-11 text-base"
+                />
+                <Button size="icon" variant="ghost" onClick={() => removeKeyword(index)} className="h-11 w-11 flex-shrink-0">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Configuration Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Language</Label>
+      <div className="grid gap-4 sm:gap-5">
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Language</Label>
           <Select value={language} onValueChange={onLanguageChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -192,10 +201,10 @@ export function AIControls({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Technical Depth</Label>
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Technical Depth</Label>
           <Select value={technicalDepth} onValueChange={onTechnicalDepthChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -208,10 +217,10 @@ export function AIControls({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Tone</Label>
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Tone</Label>
           <Select value={tone} onValueChange={onToneChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -224,10 +233,10 @@ export function AIControls({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Target Audience</Label>
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Target Audience</Label>
           <Select value={audience} onValueChange={onAudienceChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -240,10 +249,10 @@ export function AIControls({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Primary Objective</Label>
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Primary Objective</Label>
           <Select value={objective} onValueChange={onObjectiveChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -256,10 +265,10 @@ export function AIControls({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Theme</Label>
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Theme</Label>
           <Select value={theme} onValueChange={(v) => onThemeChange(v as "dark" | "light")}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
