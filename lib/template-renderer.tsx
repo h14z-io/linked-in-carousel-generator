@@ -44,7 +44,7 @@ export function renderCarouselHTML(
   slides: Slide[],
   templateId: string,
   fontScale: number = 1.0,
-  theme: ThemeMode = "dark",
+  theme: ThemeMode = "dark"
 ): string {
   const colors = THEME_COLORS[theme]
 
@@ -383,7 +383,7 @@ export function renderCarouselHTML(
         <span class="branding"><span class="highlight">H</span>idalgo <span class="highlight">H</span>ernández | <span class="highlight">S</span>trategic <span class="highlight">A</span>dvisory</span>
       </div>
     </section>
-  `,
+  `
     )
     .join("")
 

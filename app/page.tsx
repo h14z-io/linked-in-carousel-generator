@@ -11,9 +11,25 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Sparkles, Download, Copy, AlertCircle, Loader2, RefreshCw, Edit2, X, Plus } from "lucide-react"
+import {
+  Sparkles,
+  Download,
+  Copy,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  Edit2,
+  X,
+  Plus,
+} from "lucide-react"
 import type { GenerationInput, GenerationState, GenerationResult, Slide } from "@/lib/types"
 import { safeExtractJSON } from "@/lib/safe-extract-json"
 import { renderCarouselHTML } from "@/lib/template-renderer"
@@ -59,7 +75,11 @@ const AUDIENCES = [
   { id: "tech", label: "Técnica", description: "Developers, Engineers, Architects" },
   { id: "finance", label: "Finanzas", description: "CFOs, Finance Directors" },
   { id: "exec", label: "Ejecutivos", description: "CEOs, C-Level - Estrategia y transformación" },
-  { id: "managers", label: "Managers", description: "Team Leads, Directors - Implementación y equipos" },
+  {
+    id: "managers",
+    label: "Managers",
+    description: "Team Leads, Directors - Implementación y equipos",
+  },
 ]
 
 const LANGUAGES = [
@@ -425,7 +445,9 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
           console.log("[v0] Successfully fetched content from URLs")
         } catch (error) {
           console.error("[v0] Error fetching URLs:", error)
-          setError("Error al obtener contenido de las URLs. Verifica que sean válidas y accesibles.")
+          setError(
+            "Error al obtener contenido de las URLs. Verifica que sean válidas y accesibles."
+          )
           setIsGenerating(false)
           return
         }
@@ -461,7 +483,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
 
       if (response.candidates?.[0]?.finishReason === "MAX_TOKENS") {
         throw new Error(
-          "La respuesta fue truncada por límite de tokens. Intenta reducir el número de slides o audiencias.",
+          "La respuesta fue truncada por límite de tokens. Intenta reducir el número de slides o audiencias."
         )
       }
 
@@ -477,7 +499,9 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
         text = response.candidates[0].text
       } else {
         console.error("[v0] Could not find text in response:", response)
-        throw new Error("No se pudo extraer el texto de la respuesta de Gemini. Estructura de respuesta inesperada.")
+        throw new Error(
+          "No se pudo extraer el texto de la respuesta de Gemini. Estructura de respuesta inesperada."
+        )
       }
 
       console.log("[v0] Extracted text length:", text.length)
@@ -501,7 +525,9 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       // Validate that required keywords are present if specified
       if (input.requiredKeywords.length > 0) {
         const allText = JSON.stringify(payload).toLowerCase()
-        const missingKeywords = input.requiredKeywords.filter((keyword) => !allText.includes(keyword.toLowerCase()))
+        const missingKeywords = input.requiredKeywords.filter(
+          (keyword) => !allText.includes(keyword.toLowerCase())
+        )
         if (missingKeywords.length > 0) {
           console.warn("[v0] Missing required keywords:", missingKeywords)
         }
@@ -527,11 +553,13 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
 
       if (err instanceof Error) {
         if (err.message.includes("API key")) {
-          errorMessage = "API Key inválida. Verifica tu configuración en la página de Configuración."
+          errorMessage =
+            "API Key inválida. Verifica tu configuración en la página de Configuración."
         } else if (err.message.includes("quota")) {
           errorMessage = "Límite de cuota excedido. Espera unos minutos e intenta de nuevo."
         } else if (err.message.includes("not found")) {
-          errorMessage = "Modelo no encontrado. Verifica que tu API key tenga acceso a Gemini 2.5 Pro."
+          errorMessage =
+            "Modelo no encontrado. Verifica que tu API key tenga acceso a Gemini 2.5 Pro."
         } else {
           errorMessage = err.message
         }
@@ -620,7 +648,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       setError(
         error instanceof Error
           ? `Error al descargar con html-to-image: ${error.message}`
-          : "Error al descargar las imágenes. Intenta de nuevo.",
+          : "Error al descargar las imágenes. Intenta de nuevo."
       )
     }
   }
@@ -686,36 +714,37 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
 
         // Export as PNG for maximum text sharpness and quality
         await new Promise<void>((resolve, reject) => {
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const url = URL.createObjectURL(blob)
-                const link = document.createElement("a")
-                link.download = `carousel-slide-${String(i + 1).padStart(2, "0")}.png`
-                link.href = url
-                link.click()
-                URL.revokeObjectURL(url)
-                console.log(`[v0] Slide ${i + 1} exported: ${(blob.size / 1024).toFixed(2)}KB (PNG ${optimalScale}x)`)
-                resolve()
-              } else {
-                reject(new Error(`Failed to export slide ${i + 1}`))
-              }
-            },
-            "image/png",
-          )
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob)
+              const link = document.createElement("a")
+              link.download = `carousel-slide-${String(i + 1).padStart(2, "0")}.png`
+              link.href = url
+              link.click()
+              URL.revokeObjectURL(url)
+              console.log(
+                `[v0] Slide ${i + 1} exported: ${(blob.size / 1024).toFixed(2)}KB (PNG ${optimalScale}x)`
+              )
+              resolve()
+            } else {
+              reject(new Error(`Failed to export slide ${i + 1}`))
+            }
+          }, "image/png")
         })
 
         await new Promise((resolve) => setTimeout(resolve, 800))
       }
 
       document.body.removeChild(iframe)
-      console.log(`[v0] All slides exported successfully as HIGH-QUALITY PNG (${optimalScale}x scale)`)
+      console.log(
+        `[v0] All slides exported successfully as HIGH-QUALITY PNG (${optimalScale}x scale)`
+      )
     } catch (error) {
       console.error("[v0] html2canvas export error:", error)
       setError(
         error instanceof Error
           ? `Error al descargar las imágenes: ${error.message}`
-          : "Error al descargar las imágenes. Intenta de nuevo.",
+          : "Error al descargar las imágenes. Intenta de nuevo."
       )
     }
   }
@@ -736,652 +765,719 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground">Generar Carrusel</h1>
+          <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground">
+            Generar Carrusel
+          </h1>
           <p className="mt-2 text-pretty text-muted-foreground">
             Crea carruseles profesionales para LinkedIn con IA en segundos
           </p>
         </div>
 
         {mounted && (
-        <div className="space-y-6">
-          {/* Input Form - Full Width */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-foreground">Configuración del Carrusel</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Configura todos los parámetros para generar tu carrusel personalizado
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Contenido Base</h3>
-                  <p className="text-sm text-muted-foreground">
-                    El contenido fuente que se usará para generar el carrusel. El sistema leerá y extraerá el contenido
-                    real de las URLs.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-foreground">URLs (hasta 5)</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Agrega URLs de artículos, blogs o páginas web. El sistema extraerá automáticamente el contenido.
-                  </p>
-                  {urlInputs.map((url, index) => (
-                    <div key={index} className="flex gap-2">
-                      <div className="flex-1 space-y-1">
-                        <Input
-                          placeholder={`URL ${index + 1} (ej: https://example.com/article)`}
-                          value={url}
-                          onChange={(e) => handleUrlChange(index, e.target.value)}
-                          className={`border-input bg-secondary text-foreground placeholder:text-muted-foreground ${
-                            urlErrors[index] ? "border-destructive" : ""
-                          }`}
-                        />
-                        {urlErrors[index] && <p className="text-xs text-destructive">{urlErrors[index]}</p>}
-                      </div>
-                      {urlInputs.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeUrlField(index)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {urlInputs.length < 5 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addUrlField}
-                      className="w-full border-dashed bg-transparent"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Agregar URL
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="source" className="text-foreground">
-                    Texto Adicional (Opcional)
-                  </Label>
-                  <Textarea
-                    id="source"
-                    placeholder="Pega tu texto o URLs (una por línea)..."
-                    rows={8}
-                    value={input.sourceText}
-                    onChange={(e) => setInput((prev) => ({ ...prev, sourceText: e.target.value }))}
-                    className="resize-none border-input bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Este texto se combinará con el contenido extraído de las URLs para crear un corpus único.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground">Idioma</Label>
-                  <Tabs
-                    value={input.language}
-                    onValueChange={(v) => setInput((prev) => ({ ...prev, language: v as "es" | "en" }))}
-                  >
-                    <TabsList className="grid w-full grid-cols-2 bg-secondary">
-                      {LANGUAGES.map((lang) => (
-                        <TabsTrigger
-                          key={lang.id}
-                          value={lang.id}
-                          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                        >
-                          {lang.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-              </div>
-
-              <Separator className="bg-border" />
-
-              <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Configuración de Contenido</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Controla el estilo, tono y profundidad del contenido de los slides
-                  </p>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="technical-depth" className="text-foreground">
-                      Profundidad Técnica
-                    </Label>
-                    <Select
-                      value={input.technicalDepth}
-                      onValueChange={(v) => setInput((prev) => ({ ...prev, technicalDepth: v as any }))}
-                    >
-                      <SelectTrigger
-                        id="technical-depth"
-                        className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="border-border bg-card">
-                        {TECHNICAL_DEPTHS.map((depth) => (
-                          <SelectItem key={depth.id} value={depth.id} className="text-foreground">
-                            <div className="py-1">
-                              <div className="font-medium">{depth.label}</div>
-                              <div className="text-xs text-muted-foreground">{depth.description}</div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+          <div className="space-y-6">
+            {/* Input Form - Full Width */}
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle className="text-foreground">Configuración del Carrusel</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Configura todos los parámetros para generar tu carrusel personalizado
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">Contenido Base</h3>
+                    <p className="text-sm text-muted-foreground">
+                      El contenido fuente que se usará para generar el carrusel. El sistema leerá y
+                      extraerá el contenido real de las URLs.
+                    </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tone" className="text-foreground">
-                      Tono
-                    </Label>
-                    <Select value={input.tone} onValueChange={(v) => setInput((prev) => ({ ...prev, tone: v as any }))}>
-                      <SelectTrigger
-                        id="tone"
-                        className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="border-border bg-card">
-                        {TONES.map((tone) => (
-                          <SelectItem key={tone.id} value={tone.id} className="text-foreground">
-                            {tone.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="copy-length" className="text-foreground">
-                      Longitud del Copy
-                    </Label>
-                    <Select
-                      value={input.copyLength}
-                      onValueChange={(v) => setInput((prev) => ({ ...prev, copyLength: v as any }))}
-                    >
-                      <SelectTrigger
-                        id="copy-length"
-                        className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="border-border bg-card">
-                        {COPY_LENGTHS.map((length) => (
-                          <SelectItem key={length.id} value={length.id} className="text-foreground">
-                            <div className="py-1">
-                              <div className="font-medium">{length.label}</div>
-                              <div className="text-xs text-muted-foreground">{length.description}</div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="objective" className="text-foreground">
-                      Objetivo
-                    </Label>
-                    <Select
-                      value={input.objective}
-                      onValueChange={(v) => setInput((prev) => ({ ...prev, objective: v }))}
-                    >
-                      <SelectTrigger
-                        id="objective"
-                        className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="border-border bg-card">
-                        {OBJECTIVES.map((obj) => (
-                          <SelectItem key={obj.id} value={obj.id} className="text-foreground">
-                            {obj.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="keywords" className="text-foreground">
-                    Palabras Clave Obligatorias
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="keywords"
-                      placeholder="Agregar palabra clave..."
-                      value={keywordInput}
-                      onChange={(e) => setKeywordInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          addKeyword()
-                        }
-                      }}
-                      className="border-input bg-secondary text-foreground placeholder:text-muted-foreground"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={addKeyword}
-                      className="border-border bg-transparent text-foreground hover:bg-secondary"
-                    >
-                      Agregar
-                    </Button>
-                  </div>
-                  {input.requiredKeywords.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {input.requiredKeywords.map((keyword, i) => (
-                        <span
-                          key={i}
-                          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                        >
-                          {keyword}
-                          <button
-                            onClick={() => removeKeyword(keyword)}
-                            className="hover:text-primary-foreground"
-                            aria-label="Remove keyword"
+                  <div className="space-y-3">
+                    <Label className="text-foreground">URLs (hasta 5)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Agrega URLs de artículos, blogs o páginas web. El sistema extraerá
+                      automáticamente el contenido.
+                    </p>
+                    {urlInputs.map((url, index) => (
+                      <div key={index} className="flex gap-2">
+                        <div className="flex-1 space-y-1">
+                          <Input
+                            placeholder={`URL ${index + 1} (ej: https://example.com/article)`}
+                            value={url}
+                            onChange={(e) => handleUrlChange(index, e.target.value)}
+                            className={`border-input bg-secondary text-foreground placeholder:text-muted-foreground ${
+                              urlErrors[index] ? "border-destructive" : ""
+                            }`}
+                          />
+                          {urlErrors[index] && (
+                            <p className="text-xs text-destructive">{urlErrors[index]}</p>
+                          )}
+                        </div>
+                        {urlInputs.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeUrlField(index)}
+                            className="text-muted-foreground hover:text-destructive"
                           >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Audiencia</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Selecciona la audiencia principal para el contenido
-                  </p>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  {AUDIENCES.map((audience) => (
-                    <button
-                      key={audience.id}
-                      onClick={() => setInput((prev) => ({ ...prev, audienceMode: audience.id as any }))}
-                      className={`flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${
-                        input.audienceMode === audience.id
-                          ? "border-primary bg-primary/5 shadow-md"
-                          : "border-border hover:border-primary/50 bg-secondary/30"
-                      }`}
-                    >
-                      <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                        input.audienceMode === audience.id
-                          ? "border-primary"
-                          : "border-muted-foreground/40"
-                      }`}>
-                        {input.audienceMode === audience.id && (
-                          <div className="h-2 w-2 rounded-full bg-primary" />
+                            <X className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium leading-none text-foreground">
-                          {audience.label}
-                        </span>
-                        <p className="text-xs text-muted-foreground mt-1">{audience.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Configuración del Carrusel</h3>
-                  <p className="text-sm text-muted-foreground">Define cuántos slides tendrá tu carrusel</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground">Número de slides: {input.slideCount}</Label>
-                  <Slider
-                    value={[input.slideCount]}
-                    onValueChange={([v]) => setInput((prev) => ({ ...prev, slideCount: v }))}
-                    min={5}
-                    max={10}
-                    step={1}
-                    className="w-full [&_[role=slider]]:border-primary [&_[role=slider]]:bg-primary"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    LinkedIn recomienda 5-10 slides para máximo engagement (24.42% vs 6.67%)
-                  </p>
-                </div>
-              </div>
-
-              {error && (
-                <Alert className="border-destructive bg-destructive/10">
-                  <AlertCircle className="h-4 w-4 text-destructive" />
-                  <AlertDescription className="text-destructive">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                onClick={generateCarousel}
-                disabled={isGenerating}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                size="lg"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generar Carrusel
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {generation.htmlPreview && (
-            <div className="space-y-6">
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <div className="space-y-3">
-                    <div>
-                      <CardTitle>Vista Previa</CardTitle>
-                      <CardDescription>Preview interactivo del carrusel generado</CardDescription>
-                    </div>
-
-                    {/* Template & Theme Selectors */}
-                    <div className="flex flex-wrap items-center gap-4">
-                      {/* Template Selector with thumbnails */}
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">Plantilla:</Label>
-                        <div className="flex gap-1">
-                          {TEMPLATES.map((t) => (
-                            <button
-                              key={t.id}
-                              onClick={() => changeTemplate(t.id)}
-                              className={`group relative px-3 py-1.5 rounded-md border-2 transition-all text-xs font-medium ${
-                                input.templateId === t.id
-                                  ? "border-primary bg-primary/10 text-primary"
-                                  : "border-border hover:border-primary/50 text-muted-foreground"
-                              }`}
-                              title={t.description}
-                            >
-                              <span className="hidden sm:inline">{t.label}</span>
-                              <span className="sm:hidden">{t.label.split(" ")[1]}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Theme Selector */}
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">Tema:</Label>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => setInput((prev) => ({ ...prev, theme: "dark" }))}
-                            className={`px-3 py-1.5 rounded-md border-2 transition-all flex items-center gap-1.5 ${
-                              input.theme === "dark"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <div className="h-3 w-3 rounded bg-gradient-to-br from-[#0B0B0E] to-[#15151A] border border-border" />
-                            <span className="text-xs font-medium text-foreground">Dark</span>
-                          </button>
-                          <button
-                            onClick={() => setInput((prev) => ({ ...prev, theme: "light" }))}
-                            className={`px-3 py-1.5 rounded-md border-2 transition-all flex items-center gap-1.5 ${
-                              input.theme === "light"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <div className="h-3 w-3 rounded bg-gradient-to-br from-white to-[#F5F5F7] border border-border" />
-                            <span className="text-xs font-medium text-foreground">Light</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium text-foreground">Escala de Fuente</Label>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-primary">{fontScale.toFixed(2)}x</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={applyAutoScale}
-                            className="h-7 px-3 text-xs"
-                            disabled={slidesData.length === 0}
-                          >
-                            Auto
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setFontScale(1.0)}
-                            className="h-7 px-3 text-xs"
-                          >
-                            Reset
-                          </Button>
-                        </div>
-                      </div>
-                      <Slider
-                        value={[fontScale]}
-                        onValueChange={(v) => setFontScale(v[0])}
-                        min={0.8}
-                        max={1.2}
-                        step={0.02}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>0.8x - Pequeño</span>
-                        <span>1.0x - Normal</span>
-                        <span>1.2x - Grande</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-center">
-                      <div className="rounded-lg border-2 border-border bg-background shadow-xl overflow-hidden" style={{ aspectRatio: "1/1", maxWidth: "550px", width: "100%", position: "relative" }}>
-                        <iframe
-                          srcDoc={generation.htmlPreview}
-                          style={{
-                            width: "1080px",
-                            height: "1080px",
-                            transform: "scale(0.509)",
-                            transformOrigin: "0 0",
-                            border: "none",
-                          }}
-                          title="Carousel Preview"
-                          frameBorder="0"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Preview (escalado) • Descarga: 1080×1080px PNG (Cuadrado)
-                    </p>
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 bg-transparent" size="sm" onClick={downloadImages}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Descargar Imágenes (1080x1080 PNG)
+                    ))}
+                    {urlInputs.length < 5 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addUrlField}
+                        className="w-full border-dashed bg-transparent"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Agregar URL
                       </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="source" className="text-foreground">
+                      Texto Adicional (Opcional)
+                    </Label>
+                    <Textarea
+                      id="source"
+                      placeholder="Pega tu texto o URLs (una por línea)..."
+                      rows={8}
+                      value={input.sourceText}
+                      onChange={(e) =>
+                        setInput((prev) => ({ ...prev, sourceText: e.target.value }))
+                      }
+                      className="resize-none border-input bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Este texto se combinará con el contenido extraído de las URLs para crear un
+                      corpus único.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Idioma</Label>
+                    <Tabs
+                      value={input.language}
+                      onValueChange={(v) =>
+                        setInput((prev) => ({ ...prev, language: v as "es" | "en" }))
+                      }
+                    >
+                      <TabsList className="grid w-full grid-cols-2 bg-secondary">
+                        {LANGUAGES.map((lang) => (
+                          <TabsTrigger
+                            key={lang.id}
+                            value={lang.id}
+                            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                          >
+                            {lang.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                </div>
+
+                <Separator className="bg-border" />
+
+                <Separator className="bg-border" />
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Configuración de Contenido
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Controla el estilo, tono y profundidad del contenido de los slides
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="technical-depth" className="text-foreground">
+                        Profundidad Técnica
+                      </Label>
+                      <Select
+                        value={input.technicalDepth}
+                        onValueChange={(v) =>
+                          setInput((prev) => ({ ...prev, technicalDepth: v as any }))
+                        }
+                      >
+                        <SelectTrigger
+                          id="technical-depth"
+                          className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-border bg-card">
+                          {TECHNICAL_DEPTHS.map((depth) => (
+                            <SelectItem key={depth.id} value={depth.id} className="text-foreground">
+                              <div className="py-1">
+                                <div className="font-medium">{depth.label}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {depth.description}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">Editar Slides Individuales</Label>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
-                        {slidesData.map((slide, index) => (
-                          <Dialog key={index}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-auto flex-col gap-1 bg-secondary py-2"
-                                onClick={() => setEditingSlideIndex(index)}
-                              >
-                                <Edit2 className="h-3 w-3" />
-                                <span className="text-xs">Slide {index + 1}</span>
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl border-border bg-card">
-                              <DialogHeader>
-                                <DialogTitle className="text-foreground">Editar Slide {index + 1}</DialogTitle>
-                                <DialogDescription className="text-muted-foreground">
-                                  Proporciona instrucciones específicas para modificar este slide
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="rounded-lg bg-secondary p-4">
-                                  <h4 className="mb-2 font-semibold text-foreground">{slide.title}</h4>
-                                  <ul className="space-y-1 text-sm text-muted-foreground">
-                                    {slide.bullets.map((bullet, i) => (
-                                      <li key={i} className="flex gap-2">
-                                        <span>•</span>
-                                        <span>{bullet}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
+                      <Label htmlFor="tone" className="text-foreground">
+                        Tono
+                      </Label>
+                      <Select
+                        value={input.tone}
+                        onValueChange={(v) => setInput((prev) => ({ ...prev, tone: v as any }))}
+                      >
+                        <SelectTrigger
+                          id="tone"
+                          className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-border bg-card">
+                          {TONES.map((tone) => (
+                            <SelectItem key={tone.id} value={tone.id} className="text-foreground">
+                              {tone.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="copy-length" className="text-foreground">
+                        Longitud del Copy
+                      </Label>
+                      <Select
+                        value={input.copyLength}
+                        onValueChange={(v) =>
+                          setInput((prev) => ({ ...prev, copyLength: v as any }))
+                        }
+                      >
+                        <SelectTrigger
+                          id="copy-length"
+                          className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-border bg-card">
+                          {COPY_LENGTHS.map((length) => (
+                            <SelectItem
+                              key={length.id}
+                              value={length.id}
+                              className="text-foreground"
+                            >
+                              <div className="py-1">
+                                <div className="font-medium">{length.label}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {length.description}
                                 </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="edit-instructions" className="text-foreground">
-                                    Instrucciones de edición
-                                  </Label>
-                                  <Textarea
-                                    id="edit-instructions"
-                                    placeholder="Ej: Hazlo más técnico, agrega datos específicos, cambia el enfoque a ROI..."
-                                    rows={4}
-                                    value={slideEditInstructions}
-                                    onChange={(e) => setSlideEditInstructions(e.target.value)}
-                                    className="resize-none border-input bg-secondary text-foreground"
-                                  />
-                                </div>
-                                <Button
-                                  onClick={() => editSlide(index, slideEditInstructions)}
-                                  disabled={isEditingSlide}
-                                  className="w-full bg-primary text-primary-foreground"
-                                >
-                                  {isEditingSlide ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Editando...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <RefreshCw className="mr-2 h-4 w-4" />
-                                      Regenerar Slide
-                                    </>
-                                  )}
-                                </Button>
                               </div>
-                            </DialogContent>
-                          </Dialog>
-                        ))}
-                      </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="objective" className="text-foreground">
+                        Objetivo
+                      </Label>
+                      <Select
+                        value={input.objective}
+                        onValueChange={(v) => setInput((prev) => ({ ...prev, objective: v }))}
+                      >
+                        <SelectTrigger
+                          id="objective"
+                          className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-border bg-card">
+                          {OBJECTIVES.map((obj) => (
+                            <SelectItem key={obj.id} value={obj.id} className="text-foreground">
+                              {obj.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
 
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* Copys Sugeridos - Left column, full height */}
-                {generation.postCopies.length > 0 && (
-                  <Card className="border-border bg-card">
-                    <CardHeader>
-                      <CardTitle>Copys Sugeridos</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {generation.postCopies.map((copy, i) => (
-                        <div key={i} className="space-y-2">
-                          <div className="rounded-lg bg-secondary p-4 text-sm leading-relaxed">{copy}</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="keywords" className="text-foreground">
+                      Palabras Clave Obligatorias
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="keywords"
+                        placeholder="Agregar palabra clave..."
+                        value={keywordInput}
+                        onChange={(e) => setKeywordInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addKeyword()
+                          }
+                        }}
+                        className="border-input bg-secondary text-foreground placeholder:text-muted-foreground"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addKeyword}
+                        className="border-border bg-transparent text-foreground hover:bg-secondary"
+                      >
+                        Agregar
+                      </Button>
+                    </div>
+                    {input.requiredKeywords.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {input.requiredKeywords.map((keyword, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                          >
+                            {keyword}
+                            <button
+                              onClick={() => removeKeyword(keyword)}
+                              className="hover:text-primary-foreground"
+                              aria-label="Remove keyword"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Separator className="bg-border" />
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">Audiencia</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Selecciona la audiencia principal para el contenido
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {AUDIENCES.map((audience) => (
+                      <button
+                        key={audience.id}
+                        onClick={() =>
+                          setInput((prev) => ({ ...prev, audienceMode: audience.id as any }))
+                        }
+                        className={`flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${
+                          input.audienceMode === audience.id
+                            ? "border-primary bg-primary/5 shadow-md"
+                            : "border-border hover:border-primary/50 bg-secondary/30"
+                        }`}
+                      >
+                        <div
+                          className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                            input.audienceMode === audience.id
+                              ? "border-primary"
+                              : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {input.audienceMode === audience.id && (
+                            <div className="h-2 w-2 rounded-full bg-primary" />
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium leading-none text-foreground">
+                            {audience.label}
+                          </span>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {audience.description}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator className="bg-border" />
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Configuración del Carrusel
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Define cuántos slides tendrá tu carrusel
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Número de slides: {input.slideCount}</Label>
+                    <Slider
+                      value={[input.slideCount]}
+                      onValueChange={([v]) => setInput((prev) => ({ ...prev, slideCount: v }))}
+                      min={5}
+                      max={10}
+                      step={1}
+                      className="w-full [&_[role=slider]]:border-primary [&_[role=slider]]:bg-primary"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      LinkedIn recomienda 5-10 slides para máximo engagement (24.42% vs 6.67%)
+                    </p>
+                  </div>
+                </div>
+
+                {error && (
+                  <Alert className="border-destructive bg-destructive/10">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <AlertDescription className="text-destructive">{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  onClick={generateCarousel}
+                  disabled={isGenerating}
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generar Carrusel
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {generation.htmlPreview && (
+              <div className="space-y-6">
+                <Card className="border-border bg-card">
+                  <CardHeader>
+                    <div className="space-y-3">
+                      <div>
+                        <CardTitle>Vista Previa</CardTitle>
+                        <CardDescription>Preview interactivo del carrusel generado</CardDescription>
+                      </div>
+
+                      {/* Template & Theme Selectors */}
+                      <div className="flex flex-wrap items-center gap-4">
+                        {/* Template Selector with thumbnails */}
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground">Plantilla:</Label>
+                          <div className="flex gap-1">
+                            {TEMPLATES.map((t) => (
+                              <button
+                                key={t.id}
+                                onClick={() => changeTemplate(t.id)}
+                                className={`group relative px-3 py-1.5 rounded-md border-2 transition-all text-xs font-medium ${
+                                  input.templateId === t.id
+                                    ? "border-primary bg-primary/10 text-primary"
+                                    : "border-border hover:border-primary/50 text-muted-foreground"
+                                }`}
+                                title={t.description}
+                              >
+                                <span className="hidden sm:inline">{t.label}</span>
+                                <span className="sm:hidden">{t.label.split(" ")[1]}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Theme Selector */}
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground">Tema:</Label>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setInput((prev) => ({ ...prev, theme: "dark" }))}
+                              className={`px-3 py-1.5 rounded-md border-2 transition-all flex items-center gap-1.5 ${
+                                input.theme === "dark"
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border hover:border-primary/50"
+                              }`}
+                            >
+                              <div className="h-3 w-3 rounded bg-gradient-to-br from-[#0B0B0E] to-[#15151A] border border-border" />
+                              <span className="text-xs font-medium text-foreground">Dark</span>
+                            </button>
+                            <button
+                              onClick={() => setInput((prev) => ({ ...prev, theme: "light" }))}
+                              className={`px-3 py-1.5 rounded-md border-2 transition-all flex items-center gap-1.5 ${
+                                input.theme === "light"
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border hover:border-primary/50"
+                              }`}
+                            >
+                              <div className="h-3 w-3 rounded bg-gradient-to-br from-white to-[#F5F5F7] border border-border" />
+                              <span className="text-xs font-medium text-foreground">Light</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium text-foreground">
+                            Escala de Fuente
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-primary">
+                              {fontScale.toFixed(2)}x
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={applyAutoScale}
+                              className="h-7 px-3 text-xs"
+                              disabled={slidesData.length === 0}
+                            >
+                              Auto
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setFontScale(1.0)}
+                              className="h-7 px-3 text-xs"
+                            >
+                              Reset
+                            </Button>
+                          </div>
+                        </div>
+                        <Slider
+                          value={[fontScale]}
+                          onValueChange={(v) => setFontScale(v[0])}
+                          min={0.8}
+                          max={1.2}
+                          step={0.02}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>0.8x - Pequeño</span>
+                          <span>1.0x - Normal</span>
+                          <span>1.2x - Grande</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-center">
+                        <div
+                          className="rounded-lg border-2 border-border bg-background shadow-xl overflow-hidden"
+                          style={{
+                            aspectRatio: "1/1",
+                            maxWidth: "550px",
+                            width: "100%",
+                            position: "relative",
+                          }}
+                        >
+                          <iframe
+                            srcDoc={generation.htmlPreview}
+                            style={{
+                              width: "1080px",
+                              height: "1080px",
+                              transform: "scale(0.509)",
+                              transformOrigin: "0 0",
+                              border: "none",
+                            }}
+                            title="Carousel Preview"
+                            frameBorder="0"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Preview (escalado) • Descarga: 1080×1080px PNG (Cuadrado)
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1 bg-transparent"
+                          size="sm"
+                          onClick={downloadImages}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Descargar Imágenes (1080x1080 PNG)
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-foreground">
+                          Editar Slides Individuales
+                        </Label>
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+                          {slidesData.map((slide, index) => (
+                            <Dialog key={index}>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-auto flex-col gap-1 bg-secondary py-2"
+                                  onClick={() => setEditingSlideIndex(index)}
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                  <span className="text-xs">Slide {index + 1}</span>
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl border-border bg-card">
+                                <DialogHeader>
+                                  <DialogTitle className="text-foreground">
+                                    Editar Slide {index + 1}
+                                  </DialogTitle>
+                                  <DialogDescription className="text-muted-foreground">
+                                    Proporciona instrucciones específicas para modificar este slide
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="rounded-lg bg-secondary p-4">
+                                    <h4 className="mb-2 font-semibold text-foreground">
+                                      {slide.title}
+                                    </h4>
+                                    <ul className="space-y-1 text-sm text-muted-foreground">
+                                      {slide.bullets.map((bullet, i) => (
+                                        <li key={i} className="flex gap-2">
+                                          <span>•</span>
+                                          <span>{bullet}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="edit-instructions" className="text-foreground">
+                                      Instrucciones de edición
+                                    </Label>
+                                    <Textarea
+                                      id="edit-instructions"
+                                      placeholder="Ej: Hazlo más técnico, agrega datos específicos, cambia el enfoque a ROI..."
+                                      rows={4}
+                                      value={slideEditInstructions}
+                                      onChange={(e) => setSlideEditInstructions(e.target.value)}
+                                      className="resize-none border-input bg-secondary text-foreground"
+                                    />
+                                  </div>
+                                  <Button
+                                    onClick={() => editSlide(index, slideEditInstructions)}
+                                    disabled={isEditingSlide}
+                                    className="w-full bg-primary text-primary-foreground"
+                                  >
+                                    {isEditingSlide ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Editando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <RefreshCw className="mr-2 h-4 w-4" />
+                                        Regenerar Slide
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {/* Copys Sugeridos - Left column, full height */}
+                  {generation.postCopies.length > 0 && (
+                    <Card className="border-border bg-card">
+                      <CardHeader>
+                        <CardTitle>Copys Sugeridos</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {generation.postCopies.map((copy, i) => (
+                          <div key={i} className="space-y-2">
+                            <div className="rounded-lg bg-secondary p-4 text-sm leading-relaxed">
+                              {copy}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full bg-transparent"
+                              onClick={() => copyCopyText(copy)}
+                            >
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copiar Copy
+                            </Button>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Right column - Hashtags and Horarios stacked */}
+                  <div className="space-y-6">
+                    {/* Hashtags */}
+                    {generation.hashtags.length > 0 && (
+                      <Card className="border-border bg-card">
+                        <CardHeader>
+                          <CardTitle>Hashtags</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex flex-wrap gap-2">
+                            {generation.hashtags.map((tag, i) => (
+                              <span
+                                key={i}
+                                className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                           <Button
                             variant="outline"
                             size="sm"
                             className="w-full bg-transparent"
-                            onClick={() => copyCopyText(copy)}
+                            onClick={copyHashtags}
                           >
                             <Copy className="mr-2 h-4 w-4" />
-                            Copiar Copy
+                            Copiar Hashtags
                           </Button>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
+                        </CardContent>
+                      </Card>
+                    )}
 
-                {/* Right column - Hashtags and Horarios stacked */}
-                <div className="space-y-6">
-                  {/* Hashtags */}
-                  {generation.hashtags.length > 0 && (
-                    <Card className="border-border bg-card">
-                      <CardHeader>
-                        <CardTitle>Hashtags</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                          {generation.hashtags.map((tag, i) => (
-                            <span
-                              key={i}
-                              className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full bg-transparent" onClick={copyHashtags}>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copiar Hashtags
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Horarios Sugeridos */}
-                  {generation.scheduleSuggestions.length > 0 && (
-                    <Card className="border-border bg-card">
-                      <CardHeader>
-                        <CardTitle>Horarios Sugeridos</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2 text-sm">
-                          {generation.scheduleSuggestions.map((time, i) => (
-                            <li key={i} className="flex items-center gap-2 text-muted-foreground">
-                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                              {time}
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
+                    {/* Horarios Sugeridos */}
+                    {generation.scheduleSuggestions.length > 0 && (
+                      <Card className="border-border bg-card">
+                        <CardHeader>
+                          <CardTitle>Horarios Sugeridos</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2 text-sm">
+                            {generation.scheduleSuggestions.map((time, i) => (
+                              <li key={i} className="flex items-center gap-2 text-muted-foreground">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                {time}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
         )}
       </main>
     </div>

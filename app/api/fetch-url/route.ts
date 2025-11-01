@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         error: error.message || "Failed to fetch URL content",
         url: (await request.json()).url,
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

@@ -458,7 +458,8 @@ function buildGenericPrompt(input: GenerationInput, corpus: string): string {
   const audience = AUDIENCE_PROFILES[input.audienceMode]
   const toneStyle = TONE_STYLES[input.tone][lang]
   const depthLevel = DEPTH_LEVELS[input.technicalDepth][lang]
-  const ctas = OBJECTIVE_CTAS[input.objective as keyof typeof OBJECTIVE_CTAS] || OBJECTIVE_CTAS.leads
+  const ctas =
+    OBJECTIVE_CTAS[input.objective as keyof typeof OBJECTIVE_CTAS] || OBJECTIVE_CTAS.leads
 
   const promptEs = `Eres un Senior B2B Marketing Strategist especializado en LinkedIn con 10+ años creando contenido que convierte.
 

@@ -8,8 +8,23 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Key, Palette, Zap, Save, CheckCircle2, ExternalLink, Download } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Settings,
+  Key,
+  Palette,
+  Zap,
+  Save,
+  CheckCircle2,
+  ExternalLink,
+  Download,
+} from "lucide-react"
 
 // Default theme colors matching template-renderer.tsx
 const DEFAULT_DARK_COLORS = {
@@ -100,7 +115,9 @@ export default function SettingsPage() {
             <Settings className="h-8 w-8" />
             Configuración
           </h1>
-          <p className="mt-2 text-muted-foreground">Configura tu API key y personaliza la identidad de tu marca</p>
+          <p className="mt-2 text-muted-foreground">
+            Configura tu API key y personaliza la identidad de tu marca
+          </p>
         </div>
 
         <div className="mx-auto max-w-3xl">
@@ -198,18 +215,24 @@ export default function SettingsPage() {
                         <SelectItem value="gemini-2.5-flash">
                           <div className="flex flex-col">
                             <span className="font-medium">Gemini 2.5 Flash</span>
-                            <span className="text-xs text-muted-foreground">(Recomendado) - Rápido y económico</span>
+                            <span className="text-xs text-muted-foreground">
+                              (Recomendado) - Rápido y económico
+                            </span>
                           </div>
                         </SelectItem>
                         <SelectItem value="gemini-2.5-pro">
                           <div className="flex flex-col">
                             <span className="font-medium">Gemini 2.5 Pro</span>
-                            <span className="text-xs text-muted-foreground">Más potente, 15x más caro</span>
+                            <span className="text-xs text-muted-foreground">
+                              Más potente, 15x más caro
+                            </span>
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Cambiar el modelo afectará las generaciones futuras</p>
+                    <p className="text-xs text-muted-foreground">
+                      Cambiar el modelo afectará las generaciones futuras
+                    </p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -238,7 +261,10 @@ export default function SettingsPage() {
                   <Alert className="border-primary/20 bg-primary/5">
                     <Zap className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-sm">
-                      <p className="font-medium text-foreground">Modelo Actual: {geminiModel === "gemini-2.5-flash" ? "Gemini 2.5 Flash" : "Gemini 2.5 Pro"}</p>
+                      <p className="font-medium text-foreground">
+                        Modelo Actual:{" "}
+                        {geminiModel === "gemini-2.5-flash" ? "Gemini 2.5 Flash" : "Gemini 2.5 Pro"}
+                      </p>
                       <p className="mt-1 text-muted-foreground">
                         {geminiModel === "gemini-2.5-flash"
                           ? "Usando Flash: Excelente para carruseles, rápido y económico."
@@ -269,18 +295,24 @@ export default function SettingsPage() {
                         <SelectItem value="html2canvas">
                           <div className="flex flex-col">
                             <span className="font-medium">html2canvas (PNG)</span>
-                            <span className="text-xs text-muted-foreground">(Recomendado) - Alta calidad, texto sharp</span>
+                            <span className="text-xs text-muted-foreground">
+                              (Recomendado) - Alta calidad, texto sharp
+                            </span>
                           </div>
                         </SelectItem>
                         <SelectItem value="html-to-image">
                           <div className="flex flex-col">
                             <span className="font-medium">html-to-image</span>
-                            <span className="text-xs text-muted-foreground">Mayor control, múltiples formatos</span>
+                            <span className="text-xs text-muted-foreground">
+                              Mayor control, múltiples formatos
+                            </span>
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Cambiar el motor afectará las futuras descargas</p>
+                    <p className="text-xs text-muted-foreground">
+                      Cambiar el motor afectará las futuras descargas
+                    </p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -309,7 +341,10 @@ export default function SettingsPage() {
                   <Alert className="border-primary/20 bg-primary/5">
                     <Download className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-sm">
-                      <p className="font-medium text-foreground">Motor Actual: {exportEngine === "html2canvas" ? "html2canvas (PNG)" : "html-to-image"}</p>
+                      <p className="font-medium text-foreground">
+                        Motor Actual:{" "}
+                        {exportEngine === "html2canvas" ? "html2canvas (PNG)" : "html-to-image"}
+                      </p>
                       <p className="mt-1 text-muted-foreground">
                         {exportEngine === "html2canvas"
                           ? "Exportando con html2canvas en formato PNG (escala 4-5x retina, auto-DPI, máxima calidad de texto)."
@@ -568,13 +603,17 @@ export default function SettingsPage() {
                           id="light-border"
                           type="color"
                           value={lightColors.border}
-                          onChange={(e) => setLightColors({ ...lightColors, border: e.target.value })}
+                          onChange={(e) =>
+                            setLightColors({ ...lightColors, border: e.target.value })
+                          }
                           className="h-10 w-16 cursor-pointer bg-secondary p-1"
                         />
                         <Input
                           type="text"
                           value={lightColors.border}
-                          onChange={(e) => setLightColors({ ...lightColors, border: e.target.value })}
+                          onChange={(e) =>
+                            setLightColors({ ...lightColors, border: e.target.value })
+                          }
                           className="flex-1 bg-secondary font-mono text-sm"
                         />
                       </div>
@@ -611,7 +650,9 @@ export default function SettingsPage() {
                       onChange={(e) => setBrandName(e.target.value)}
                       className="bg-secondary"
                     />
-                    <p className="text-xs text-muted-foreground">Este nombre aparecerá en los carruseles generados</p>
+                    <p className="text-xs text-muted-foreground">
+                      Este nombre aparecerá en los carruseles generados
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -640,9 +681,14 @@ export default function SettingsPage() {
                   <div className="rounded-lg border border-border bg-secondary p-4">
                     <p className="mb-3 text-sm font-medium text-foreground">Vista Previa</p>
                     <div className="flex items-center gap-3">
-                      <div className="h-16 w-16 rounded-lg" style={{ backgroundColor: brandColor }} />
+                      <div
+                        className="h-16 w-16 rounded-lg"
+                        style={{ backgroundColor: brandColor }}
+                      />
                       <div>
-                        <p className="text-lg font-bold text-foreground">{brandName || "Tu Marca"}</p>
+                        <p className="text-lg font-bold text-foreground">
+                          {brandName || "Tu Marca"}
+                        </p>
                         <p className="text-sm text-muted-foreground">Color: {brandColor}</p>
                       </div>
                     </div>
@@ -655,12 +701,18 @@ export default function SettingsPage() {
           {saved && (
             <Alert className="border-success/20 bg-success/10">
               <CheckCircle2 className="h-4 w-4 text-success" />
-              <AlertDescription className="text-success">Configuración guardada exitosamente</AlertDescription>
+              <AlertDescription className="text-success">
+                Configuración guardada exitosamente
+              </AlertDescription>
             </Alert>
           )}
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              onClick={handleSave}
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Save className="mr-2 h-4 w-4" />
               Guardar Configuración
             </Button>

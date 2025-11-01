@@ -18,7 +18,9 @@ export function Navigation() {
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold leading-none text-foreground">LinkedIn Carousel</span>
+                <span className="text-sm font-bold leading-none text-foreground">
+                  LinkedIn Carousel
+                </span>
                 <span className="text-xs leading-none text-muted-foreground">by h14z.io</span>
               </div>
             </Link>
@@ -30,7 +32,7 @@ export function Navigation() {
                   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   pathname === "/"
                     ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                 )}
               >
                 <Sparkles className="h-4 w-4" />
@@ -42,7 +44,7 @@ export function Navigation() {
                   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   pathname === "/settings"
                     ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                 )}
               >
                 <Settings className="h-4 w-4" />

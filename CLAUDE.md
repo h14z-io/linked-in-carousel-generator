@@ -25,6 +25,7 @@ npm run lint         # Run ESLint
 ## Architecture
 
 ### Core Flow
+
 1. **Content Input** (`app/page.tsx`): User provides source text/URLs + configuration
 2. **URL Fetching** (`lib/fetch-url-content.ts`): Jina AI Reader extracts clean content from URLs
 3. **AI Generation** (`app/page.tsx:generateCarousel`): Sends combined content + configuration to Gemini 2.5 Pro
@@ -35,6 +36,7 @@ npm run lint         # Run ESLint
 ### Key AI Integration Points
 
 **SDK & Models**:
+
 - Uses `GoogleGenAI` from `@google/genai` package (latest stable version)
 - Two Gemini 2.5 models available:
   - **gemini-2.5-flash** (default): Fast, 15x cheaper, ideal for carousels
@@ -42,6 +44,7 @@ npm run lint         # Run ESLint
 - Model selection stored in localStorage (`geminiModel`)
 
 **Generation (`app/page.tsx:302-611`)**:
+
 - Temperature: 0.7, Max tokens: 8000
 - **Square Format Optimizations** (v4.0):
   - Explicit 1080x1080px square format constraints in prompt
@@ -55,6 +58,7 @@ npm run lint         # Run ESLint
 - API key stored in localStorage (`geminiApiKey`)
 
 **Slide Editing (`app/page.tsx:202-300`)**:
+
 - Individual slides can be edited with AI assistance with square format constraints
 - Uses selected Gemini model with custom instructions
 - Max tokens: 2000
@@ -68,6 +72,7 @@ npm run lint         # Run ESLint
 ### Template System (`lib/template-renderer.tsx`)
 
 Five visual templates with distinct styles:
+
 - **Template A**: Minimal Tech - Clean, subtle design
 - **Template B**: Bold Magenta - Strong left border, accent underlines
 - **Template C**: Editorial Grid - Serif fonts, editorial style
@@ -75,6 +80,7 @@ Five visual templates with distinct styles:
 - **Template E**: Storytelling - Gradient accents, narrative flow
 
 Templates defined as CSS-in-JS. Each applies different:
+
 - Border styles and shadows
 - Typography (fonts, sizes, weights)
 - Icon styling and positioning
@@ -83,6 +89,7 @@ Templates defined as CSS-in-JS. Each applies different:
 ### State Management
 
 Uses React `useState` for local state management:
+
 - `input`: GenerationInput - user configuration
 - `generation`: GenerationState - AI output and rendered preview
 - `slidesData`: Slide[] - structured slide content for editing/re-rendering
@@ -91,6 +98,7 @@ Uses React `useState` for local state management:
 ### Type System (`lib/types.ts`)
 
 Key interfaces:
+
 - `GenerationInput`: All user configuration (source, template, audiences, style settings)
 - `Slide`: Individual slide structure (title, bullets, visual_direction, html)
 - `GenerationResult`: Complete AI response structure
@@ -106,6 +114,7 @@ Key interfaces:
 ### Settings & Configuration (`app/settings/page.tsx`)
 
 Stores in localStorage:
+
 - `geminiApiKey`: Google Gemini API key (required)
 - `geminiModel`: Gemini model to use (default: "gemini-2.5-flash")
   - Options: `gemini-2.5-flash` (fast, 15x cheaper) or `gemini-2.5-pro` (powerful, best reasoning)
@@ -119,6 +128,7 @@ Note: Brand customization exists in UI but is NOT yet implemented in template re
 ## Path Aliases
 
 Uses `@/*` to reference root directory files:
+
 ```typescript
 import { Component } from "@/components/component"
 import { fetchUrlContent } from "@/lib/fetch-url-content"
@@ -127,6 +137,7 @@ import { fetchUrlContent } from "@/lib/fetch-url-content"
 ## UI Framework
 
 Built with Shadcn UI (Radix UI primitives + Tailwind CSS):
+
 - Components in `components/ui/` (auto-generated, avoid manual edits)
 - Custom theme variables defined in CSS (--bg, --surf, --txt, --mut, --pri, --border)
 - Uses dark theme as default
@@ -134,6 +145,7 @@ Built with Shadcn UI (Radix UI primitives + Tailwind CSS):
 ## Important Implementation Notes
 
 ### AI Response Handling
+
 - Gemini responses may include markdown code blocks - use `safeExtractJSON` to extract
 - Check `finishReason === "MAX_TOKENS"` to detect truncated responses
 - Response structure varies - check multiple paths: `response.text`, `response.candidates[0].content.parts[0].text`, etc.
@@ -141,11 +153,14 @@ Built with Shadcn UI (Radix UI primitives + Tailwind CSS):
 ### Image Export Process (v4.0 - Square Format + Dual Engine)
 
 #### **Overview**
+
 Two export engines available (configurable in Settings):
+
 1. **html2canvas (Default)**: JPEG format, optimized for speed and consistency
 2. **html-to-image**: Advanced engine, supports PNG/JPEG/SVG with greater flexibility
 
 #### **Common Process**
+
 - Creates hidden iframe with full HTML (1080x1080px fixed dimensions)
 - Waits 3.5 seconds for Google Fonts and styles to fully load
 - Imports Montserrat and Inter fonts via Google Fonts API
@@ -155,6 +170,7 @@ Two export engines available (configurable in Settings):
 - **Dimensions: 1080x1080px (1:1 square ratio)** - LinkedIn's optimal format for professional carousels (v4.0 refactor)
 
 #### **html2canvas Engine** (`downloadImagesWithHTML2Canvas()`)
+
 - Format: **JPEG** (quality 0.95)
 - Scale: 3 (3x resolution for maximum quality)
 - Optimized for html2canvas's strengths
@@ -166,6 +182,7 @@ Two export engines available (configurable in Settings):
 - **Cons**: Limited to JPEG
 
 #### **html-to-image Engine** (`downloadImagesWithHTMLToImage()`)
+
 - Format: **JPEG** (quality 0.95, pixelRatio 3)
 - Configuration:
   - Direct DOM node to image conversion
@@ -175,6 +192,7 @@ Two export engines available (configurable in Settings):
 - **Cons**: Slightly slower, fewer options
 
 #### **CSS Optimizations (v4.0 - Square Format Refactor)**
+
 - **Removed webkit properties**: Eliminated `-webkit-background-clip` and `-webkit-text-fill-color`
   - Caused rendering issues with both engines
   - Replaced with solid colors for better compatibility
@@ -200,12 +218,14 @@ Two export engines available (configurable in Settings):
 - **Result**: Content perfectly optimized for 1080x1080px square format with visual balance
 
 ### URL Content Extraction
+
 - Jina AI Reader is external service - no authentication required
 - Returns clean markdown content
 - May fail for paywalled/restricted content
 - Content combined with user text as "corpus" for AI
 
 ### Template Switching
+
 - Can switch templates after generation without re-calling AI
 - Re-renders HTML with new template styles using existing `slidesData`
 - Preserves all content, only changes visual presentation
@@ -223,17 +243,20 @@ Two export engines available (configurable in Settings):
 ## Common Tasks
 
 **Adding a new template**:
+
 1. Add template ID to type in `lib/types.ts`
 2. Add template config to `TEMPLATES` array in `app/page.tsx`
 3. Add CSS styles to `templateStyles` in `lib/template-renderer.tsx`
 4. Add preview UI in template selection grid
 
 **Modifying AI prompt**:
+
 - Main prompt generation is in `app/page.tsx:generateCarousel` (lines ~450-515)
 - Structured with sections: language, content strategy, configuration, audience targeting, copywriting practices, slide structure, quality criteria
 - Uses template literals with dynamic instructions based on user settings
 
 **Changing slide structure**:
+
 - Update `Slide` interface in `lib/types.ts`
 - Modify prompt to request new fields
 - Update `renderCarouselHTML` to render new fields
@@ -242,6 +265,7 @@ Two export engines available (configurable in Settings):
 ## Recent Changes (v3.0)
 
 ### Phase 1: CSS Refactor & Preview Fix
+
 - **Removed webkit properties** that caused rendering issues:
   - `-webkit-background-clip: text` removed from `.slide-number`
   - `-webkit-text-fill-color: transparent` removed from `.title` (Template E)
@@ -250,6 +274,7 @@ Two export engines available (configurable in Settings):
 - **Added info text** showing export dimensions below preview
 
 ### Phase 2: PNG → JPEG Migration
+
 - **Changed default export format from PNG to JPEG** (quality 0.95)
 - **JPEG benefits for html2canvas**:
   - Better gradient/shadow rendering
@@ -260,6 +285,7 @@ Two export engines available (configurable in Settings):
 - **Quality setting: 0.95** (maximum visual quality without artifacts)
 
 ### Phase 3: Dual Export Engine
+
 - **Added `html-to-image` package** as alternative to html2canvas
 - **Settings tab**: New "Exportar" (Export) configuration tab
 - **User choice**: Select between:
@@ -272,12 +298,14 @@ Two export engines available (configurable in Settings):
 - **Persisted preference**: Engine choice saved in localStorage
 
 ### Architecture Changes
+
 - **No legacy code**: All functions refactored, not patched
 - **Modular design**: Easy to switch engines without breaking code
 - **Iterative**: Users can experiment with different engines
 - **Documented**: All engines documented in CLAUDE.md
 
 ### Phase 4: Preview Scaling & Content Distribution (v3.1)
+
 - **Preview size**: Now limited to 450px max width (was full width)
 - **Preview display**: Centered on page, maintains 4:5 aspect ratio
 - **Download quality**: Unchanged (still 1080x1350px JPEG)
@@ -291,10 +319,13 @@ Two export engines available (configurable in Settings):
 ### Phase 5: Complete Square Format Refactor (v4.0)
 
 #### **Overview**
+
 Comprehensive refactor from 1080x1350px (4:5 portrait) to 1080x1080px (1:1 square) format based on analysis of successful LinkedIn carousels. All 5 templates redesigned, all AI prompts optimized, and entire system recalibrated for square aspect ratio.
 
 #### **Motivation**
+
 Analysis of successful professional LinkedIn carousel accounts (Citi, AIG, Zenrows, Data Science Infinity) revealed that 1:1 square format significantly outperforms 4:5 portrait format for:
+
 - Visual presence and impact on the feed
 - Reduced empty white space
 - Better content density
@@ -302,6 +333,7 @@ Analysis of successful professional LinkedIn carousel accounts (Citi, AIG, Zenro
 - Native fit with LinkedIn's feed display
 
 #### **Phase 5.1: Dimension Refactor** (`lib/template-renderer.tsx`)
+
 - **HTML canvas**: 1080x1350px → 1080x1080px
 - **All CSS dimensions**: Updated to square aspect ratio
 - **Export dimensions**: 1080x1350px → 1080x1080px (both engines)
@@ -309,7 +341,9 @@ Analysis of successful professional LinkedIn carousel accounts (Citi, AIG, Zenro
 - **Preview max-width**: 450px → 550px (better visibility)
 
 #### **Phase 5.2: Template Redesign** (`lib/template-renderer.tsx`)
+
 All 5 templates redesigned with:
+
 - **Reduced font sizes** for compact square layout:
   - Slide numbers: 80px → 64px
   - Titles: 52px → 42px
@@ -329,7 +363,9 @@ All 5 templates redesigned with:
   - Template E: Gradient line reduced 6px → 4px
 
 #### **Phase 5.3: AI Prompt Optimization** (`app/page.tsx`)
+
 **Main Carousel Generation Prompt**:
+
 - Added explicit 1080x1080px square format constraints
 - Title guidelines: Max 2 lines (~50 characters)
 - Bullet guidelines: Max 12 words EACH (ultra-concise)
@@ -341,6 +377,7 @@ All 5 templates redesigned with:
 - CRITICAL warning at prompt start about format constraints
 
 **Slide Edit Prompt**:
+
 - Updated with same square format constraints
 - Emphasizes 12-word bullet limit in edit instructions
 - Maintains all quality standards while respecting space limits
@@ -348,6 +385,7 @@ All 5 templates redesigned with:
 **Result**: AI generates content optimized for visual impact in 1080x1080px square, with ultra-concise, high-value content that fills space appropriately.
 
 #### **Phase 5.4: Implementation Details**
+
 - **No breaking changes**: All existing workflows function normally
 - **Backwards compatible**: System generates same structure, just optimized dimensions
 - **Tested**: npm run build ✓ (successful compile)
@@ -355,6 +393,7 @@ All 5 templates redesigned with:
 - **Hydration fixed**: localStorage access moved to useEffect hooks (prevents SSR mismatch)
 
 #### **Phase 5.5: Files Modified**
+
 1. `lib/template-renderer.tsx`: Dimensions, font sizes, spacing, all 5 templates
 2. `app/page.tsx`:
    - Main generation prompt (copyLength, slideStructure, qualityCriteria, critical format warning)
@@ -364,7 +403,9 @@ All 5 templates redesigned with:
 3. `CLAUDE.md`: Documentation updated with v4.0 changes
 
 #### **Result**
+
 Professional LinkedIn carousel generator optimized for 1080x1080px square format:
+
 - ✅ All templates redesigned for square
 - ✅ AI prompts optimized for concise, scannable content
 - ✅ Export dimensions 1080x1080px with JPEG quality 0.95
