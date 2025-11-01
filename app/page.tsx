@@ -495,8 +495,6 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
         text = response.text
       } else if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
         text = response.candidates[0].content.parts[0].text
-      } else if (response.candidates?.[0]?.text) {
-        text = response.candidates[0].text
       } else {
         console.error("[v0] Could not find text in response:", response)
         throw new Error(

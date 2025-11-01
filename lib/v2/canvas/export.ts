@@ -89,16 +89,12 @@ async function loadTemplateBackground(canvas: fabric.Canvas, templatePath: strin
   try {
     const img = await fabric.Image.fromURL(templatePath)
     if (img) {
-      canvas.setBackgroundImage(
-        img,
-        () => {
-          canvas.renderAll()
-        },
-        {
-          scaleX: canvas.width! / (img.width || 1),
-          scaleY: canvas.height! / (img.height || 1),
-        }
-      )
+      img.set({
+        scaleX: canvas.width! / (img.width || 1),
+        scaleY: canvas.height! / (img.height || 1),
+      })
+      canvas.backgroundImage = img
+      canvas.renderAll()
     }
   } catch (error) {
     console.warn("[Export] Failed to load template, continuing without:", error)
