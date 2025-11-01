@@ -412,3 +412,460 @@ Professional LinkedIn carousel generator optimized for 1080x1080px square format
 - ✅ Preview scaled to 550px for better visualization
 - ✅ Content perfectly balanced in square space
 - ✅ No legacy code - clean, modern implementation
+
+---
+
+## v2: Canvas-Based Editor Architecture (2025)
+
+### Overview
+
+Version 2 represents a complete architectural shift from HTML/CSS rendering to a node-based canvas editor powered by Fabric.js 6. This enables full drag-and-drop editing, real-time canvas manipulation, and multimodal AI integration.
+
+**Key Changes:**
+- HTML templates → Canvas nodes
+- html2canvas export → Native Fabric.js export
+- Fixed templates → 7 narrative frameworks
+- Static generation → Full post-generation editing
+
+### Architecture v2
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ USER INPUT                                              │
+│ - Source content (text/URLs)                            │
+│ - Narrative framework selection                         │
+│ - AI configuration (tone, audience, language, etc.)     │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│ MULTIMODAL AI GENERATION (Gemini 2.5 Flash/Pro)        │
+│ - Input: Template image (1080x1080px) + text prompt    │
+│ - Output: Structured nodes with coordinates             │
+│   {                                                     │
+│     "slides": [                                         │
+│       {                                                 │
+│         "nodes": [                                      │
+│           {                                             │
+│             "type": "text",                             │
+│             "content": "...",                           │
+│             "x": 120, "y": 200,                         │
+│             "fontSize": 64,                             │
+│             "color": "#FFFFFF"                          │
+│           }                                             │
+│         ]                                               │
+│       }                                                 │
+│     ]                                                   │
+│   }                                                     │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│ CANVAS RENDERING (Fabric.js 6)                         │
+│ - Convert nodes → Fabric objects                        │
+│ - Render on 1080x1080px canvas                          │
+│ - Apply template background                             │
+│ - Enable drag & drop, resize, edit                      │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│ EDITING (Optional - Power Users)                        │
+│ - Full canvas editor with toolbars                      │
+│ - Text: font, size, weight, color                       │
+│ - Alignment: 9 position options                         │
+│ - Add: text, emoji, images (URL or upload)              │
+│ - Auto-save to sessionStorage                           │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│ EXPORT (Native Fabric.js)                              │
+│ - Batch export all slides to JPEG                       │
+│ - Format: 1080x1080px, quality 0.95                     │
+│ - Progress tracking                                     │
+│ - Sequential download (500ms delay)                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### File Structure v2
+
+```
+/app
+  /v2
+    /page.tsx                      # Main generator page
+    /editor/[slideId]/page.tsx     # Canvas editor page
+    
+/components
+  /v2
+    /canvas-editor.tsx             # Fabric.js canvas wrapper
+    /narrative-selector.tsx        # 7 narrative frameworks UI
+    /ai-controls.tsx               # AI generation controls
+    /slide-preview.tsx             # Thumbnail grid
+    /toolbar/
+      /text-toolbar.tsx            # Font, size, color controls
+      /align-toolbar.tsx           # Position & alignment tools
+      /add-toolbar.tsx             # Add elements (text, emoji, image)
+      
+/lib
+  /v2
+    /types.ts                      # Node, Slide, Project types
+    /ai/
+      /gemini-client.ts            # Multimodal API client
+      /prompt-builder.ts           # Dynamic prompt generation
+    /canvas/
+      /fabric-utils.ts             # Node ↔ Fabric converters
+      /export.ts                   # JPEG export functions
+    /templates/
+      /narrative-definitions.ts    # 7 narrative frameworks
+    /storage.ts                    # Persistence utilities
+```
+
+### Core Components
+
+#### 1. Narrative Frameworks (`lib/v2/templates/narrative-definitions.ts`)
+
+Seven proven storytelling frameworks for LinkedIn carousels:
+
+1. **PASP (Problem-Agitation-Solution-Proof)**
+   - Best for: Direct sales, lead generation
+   - Structure: Problem → Agitate → Solution → Proof
+   - 7 slides
+
+2. **BAB (Before-After-Bridge)**
+   - Best for: Case studies, testimonials, ROI
+   - Structure: Before → After → How to get there
+   - 7 slides
+
+3. **Step-by-Step Guide**
+   - Best for: Educational content, tutorials
+   - Structure: Title → 5 steps → Recap
+   - 7 slides
+
+4. **Data Storytelling**
+   - Best for: Thought leadership, research
+   - Structure: Question → 4 stats → Insight → Implications
+   - 7 slides
+
+5. **Listicle/Tips**
+   - Best for: Viral content, quick wins
+   - Structure: Title → 5 tips (emoji + title + bullets) → Bonus
+   - 7 slides
+
+6. **Behind-the-Scenes**
+   - Best for: Personal branding, authenticity
+   - Structure: Hook → 5 insights → Takeaway
+   - 7 slides
+
+7. **Case Study**
+   - Best for: B2B, professional services
+   - Structure: Client → Challenge → 3 strategies → Results → Lessons
+   - 7 slides
+
+Each framework includes:
+- `promptInstructions`: Specific AI generation instructions
+- `structure`: Slide-by-slide breakdown
+- `bestFor`: Use case guidance
+- `templateImage`: Paths to dark/light theme images
+
+#### 2. Node System (`lib/v2/types.ts`)
+
+All visual elements are represented as typed nodes:
+
+**Node Types:**
+- `TextNode`: content, fontSize, fontFamily, fontWeight, color, align, lineHeight
+- `EmojiNode`: emoji, fontSize
+- `ImageNode`: src, filters
+- `ShapeNode`: shapeType (rect/circle/line), fill, stroke, strokeWidth
+
+**Base Properties (all nodes):**
+- `id`, `type`, `x`, `y`, `width`, `height`
+- `rotation`, `opacity`, `zIndex`, `locked`
+
+#### 3. Fabric.js Integration (`lib/v2/canvas/fabric-utils.ts`)
+
+Bidirectional converters between Node types and Fabric objects:
+
+**Key Functions:**
+- `nodeToFabricObject(node)`: Convert node → Fabric.Text/Image/Rect/Circle
+- `fabricObjectToNode(obj)`: Convert Fabric object → typed node
+- `nodeToFabricImageAsync(node)`: Async image loading
+- `fabricCanvasToNodes(canvas)`: Extract all nodes from canvas
+- `setupGridSnapping(canvas, gridSize)`: Enable snap-to-grid (20px default)
+
+#### 4. Canvas Editor (`components/v2/canvas-editor.tsx`)
+
+Full-featured Fabric.js canvas with:
+- Template background loading
+- Real-time node rendering
+- Modification tracking (object:modified, text:changed events)
+- Grid snapping (optional, 20px grid)
+- Global canvas reference for toolbar access
+
+**Lifecycle:**
+1. Initialize Fabric.Canvas (1080x1080px)
+2. Load template as background image
+3. Render all nodes as Fabric objects
+4. Setup event listeners for modifications
+5. Auto-save to storage on changes
+6. Cleanup on unmount
+
+#### 5. Toolbars
+
+**Text Toolbar (`components/v2/toolbar/text-toolbar.tsx`):**
+- Font family: Inter, Montserrat, Roboto, Playfair Display, Space Grotesk
+- Font size: 12-200px
+- Font weight: 300-900 (6 options)
+- Color picker + hex input
+- Delete selected element
+
+**Align Toolbar (`components/v2/toolbar/align-toolbar.tsx`):**
+- Text alignment: left, center, right
+- Object positioning: 9 positions (left/center/right × top/middle/bottom)
+- Canvas center: center both horizontally and vertically
+
+**Add Toolbar (`components/v2/toolbar/add-toolbar.tsx`):**
+- Add text: textarea input → new text node
+- Add emoji: emoji input → new emoji node (large fontSize)
+- Add image: URL input or file upload → new image node
+- Auto-focus new elements after creation
+
+#### 6. Export System (`lib/v2/canvas/export.ts`)
+
+Native Fabric.js export (no html2canvas):
+
+**Key Functions:**
+- `exportSlideToJPEG(slide, filename)`: Export single slide
+  - Creates temporary canvas
+  - Loads template background
+  - Renders all nodes
+  - Exports to JPEG (quality 0.95)
+  - Downloads file
+  - Cleans up canvas
+
+- `exportAllSlides(slides, onProgress)`: Batch export
+  - Sequential export with progress tracking
+  - 500ms delay between downloads
+  - Continues on individual failures
+
+- `getSlidePreview(slide)`: Generate thumbnail
+  - Exports at 0.25x scale (270x270px)
+  - Lower quality (0.8) for faster generation
+
+#### 7. Storage System (`lib/v2/storage.ts`)
+
+Persistence utilities:
+
+**Session Storage (navigation state):**
+- `saveSlides(slides)`: Store slides for editor navigation
+- `loadSlides()`: Load slides in editor
+- `updateSlide(slideId, updatedSlide)`: Auto-save modifications
+
+**Local Storage (projects):**
+- `saveCurrentProject(project)`: Current project state
+- `loadCurrentProject()`: Restore project
+- `saveToProjectsList(project)`: Add to recent projects (keep last 10)
+- `loadProjectsList()`: Get recent projects
+- `createProject(...)`: Create new Project object
+
+### Multimodal AI Integration
+
+#### Prompt Structure (`lib/v2/ai/prompt-builder.ts`)
+
+Dynamic prompt generation with narrative-specific instructions:
+
+**Input to Gemini:**
+1. Template image (base64-encoded PNG)
+2. Comprehensive text prompt including:
+   - Template analysis instructions
+   - Narrative framework guidelines
+   - Content requirements (corpus, language, tone, audience)
+   - Output JSON schema with example
+   - Typography constraints (fontSize ranges)
+   - Quality checklist
+
+**Output from Gemini:**
+```json
+{
+  "slides": [
+    {
+      "nodes": [
+        {
+          "id": "title-1",
+          "type": "text",
+          "content": "Your Title",
+          "x": 120, "y": 200,
+          "width": 840, "height": 150,
+          "fontSize": 64,
+          "fontFamily": "Inter",
+          "fontWeight": 900,
+          "color": "#FFFFFF",
+          "align": "left",
+          "lineHeight": 1.2,
+          "letterSpacing": 0,
+          "rotation": 0,
+          "opacity": 1,
+          "zIndex": 10,
+          "locked": false
+        }
+      ]
+    }
+  ],
+  "postCopy": "LinkedIn post copy...",
+  "hashtags": ["#relevant", "#hashtags"]
+}
+```
+
+#### API Client (`lib/v2/ai/gemini-client.ts`)
+
+**Key Features:**
+- Model selection: gemini-2.5-flash (default) or gemini-2.5-pro
+- Temperature: 0.7, Max tokens: 8000
+- Multimodal input: image + text in single request
+- Response validation: ensures nodes fit within canvas bounds
+- Node sanitization: validates coordinates, fontSize, colors
+- Error handling: detailed logging, graceful fallbacks
+
+**Validation:**
+- Coordinates: x,y within 0-1080
+- Dimensions: width,height positive and within canvas
+- Font size: 12-200px
+- Opacity: 0-1
+- Colors: valid hex/rgb/rgba
+
+### User Flows
+
+#### One-Shot Flow (80% of users)
+
+1. Select narrative framework
+2. Paste content or add URLs
+3. Configure AI settings (language, tone, audience)
+4. Click "Generate Carousel"
+5. AI generates 7 slides with coordinates
+6. Preview thumbnails appear
+7. Click "Download All Slides (JPEG)"
+8. Done (7 JPEGs downloaded)
+
+**Time:** 30-60 seconds total
+
+#### Power User Flow (20% of users)
+
+1-6. Same as One-Shot
+7. Click "Edit" on specific slide
+8. Opens canvas editor with Fabric.js
+9. Drag elements, resize, change text
+10. Adjust fonts, colors, alignment
+11. Add emojis or images
+12. Click "Save Changes"
+13. Back to preview, click "Download All"
+14. Done (with customizations)
+
+**Time:** 3-10 minutes total
+
+### Technical Specifications
+
+**Canvas:**
+- Size: 1080x1080px (1:1 square ratio)
+- Background: Template PNG image
+- Objects: Fabric.Text, Fabric.Image, Fabric.Rect, Fabric.Circle
+- Grid: 20px snap-to-grid (optional)
+
+**Export:**
+- Format: JPEG
+- Quality: 0.95 (95%)
+- Multiplier: 1x (full resolution)
+- Method: Fabric.Canvas.toDataURL()
+
+**Typography:**
+- Fonts: Inter, Montserrat, Roboto, Playfair Display, Space Grotesk
+- Sizes: Title 52-72px, Body 24-36px, Bullets 28-40px, Numbers 80-120px
+- Weights: 300, 400, 500, 600, 700, 900
+- Line height: 1.2-1.7 (varies by type)
+
+**Performance:**
+- Generation: 10-30 seconds (depends on Gemini API)
+- Canvas rendering: <100ms per slide
+- Export: ~500ms per slide
+- Storage: sessionStorage (slides), localStorage (projects)
+
+### Known Limitations v2
+
+1. **Template images required:** Designer must create 14 PNG files (7 narratives × 2 themes)
+2. **No undo/redo in canvas:** Fabric.js history not implemented yet
+3. **No collaborative editing:** Single-user only
+4. **Session storage only:** No database persistence (by design for internal tool)
+5. **Font loading:** System fonts only (no Google Fonts integration yet)
+6. **Image CORS:** External images must support CORS for canvas export
+7. **Browser-only:** No server-side rendering for canvas operations
+
+### Future Enhancements (Backlog)
+
+1. **Undo/Redo:** Implement history tracking in canvas editor
+2. **Layers panel:** Visual z-index management
+3. **Alignment guides:** Show snap lines when objects align
+4. **Template builder:** UI for creating custom templates without code
+5. **Project management:** Full CRUD for saved projects
+6. **Export formats:** PNG, SVG export options
+7. **Animation:** Fade-in/slide-in effects for presentations
+8. **Collaboration:** Real-time multi-user editing (Socket.io)
+
+### Migration Path (v1 → v2)
+
+**For users:**
+- v1 and v2 are independent (no migration needed)
+- v1 remains accessible at `/` (app/page.tsx)
+- v2 accessible at `/v2` (app/v2/page.tsx)
+- Settings page shared (app/settings/page.tsx)
+
+**For developers:**
+- v1 code unchanged in `/app/page.tsx`, `/lib/template-renderer.tsx`
+- v2 code isolated in `/app/v2`, `/lib/v2`, `/components/v2`
+- Shared utilities: `/lib/fetch-url-content.ts`, `/lib/safe-extract-json.ts`
+- No breaking changes to existing v1 functionality
+
+### Testing v2
+
+**Manual Testing Checklist:**
+1. Generate carousel with each narrative framework
+2. Edit slide in canvas editor
+3. Test all toolbar functions (text, align, add)
+4. Export all slides to JPEG
+5. Verify exported dimensions (1080x1080px)
+6. Test navigation (v2 → editor → back to v2)
+7. Test auto-save (edit → back → edit again, changes persist)
+8. Test with different themes (dark/light)
+9. Test with URLs fetching (Jina AI Reader)
+10. Test with all 5 fonts
+
+**Browser Compatibility:**
+- Chrome/Edge: Full support (primary target)
+- Safari: Full support (webkit canvas APIs)
+- Firefox: Full support
+
+### Deployment Notes
+
+**Build:**
+```bash
+npm run build --webpack  # Force webpack (Fabric.js requires it)
+```
+
+**Environment:**
+- No server-side dependencies
+- All processing client-side
+- API keys in localStorage (browser-only)
+- Gemini API key required (user provides in Settings)
+
+**Performance:**
+- First load: ~500KB JS bundle (Fabric.js is large)
+- Canvas operations: GPU-accelerated (smooth at 60fps)
+- Export operations: Async with progress tracking (no UI freeze)
+
+---
+
+## Recommended Workflow for Claude Code
+
+When working on this project:
+
+1. **For v1 (legacy)**: Edit files in `/app/page.tsx`, `/lib/template-renderer.tsx`
+2. **For v2 (canvas)**: Edit files in `/app/v2`, `/lib/v2`, `/components/v2`
+3. **Shared utilities**: Edit `/lib/fetch-url-content.ts`, `/lib/safe-extract-json.ts`
+4. **Always format before commit**: `npm run format`
+5. **Test build before deploy**: `npm run build --webpack`
+6. **Document changes**: Update this file (CLAUDE.md) for significant changes
+
