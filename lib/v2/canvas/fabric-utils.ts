@@ -89,29 +89,24 @@ export function nodeToFabricObject(node: Node): fabric.Object {
  * Convert an ImageNode to a Fabric.js Image (async)
  */
 export async function nodeToFabricImageAsync(node: ImageNode): Promise<fabric.Image> {
-  return new Promise((resolve, reject) => {
-    fabric.Image.fromURL(
-      node.src,
-      (img) => {
-        if (!img) {
-          reject(new Error("Failed to load image"))
-          return
-        }
-        img.set({
-          left: node.x,
-          top: node.y,
-          scaleX: node.width / (img.width || 1),
-          scaleY: node.height / (img.height || 1),
-          angle: node.rotation,
-          opacity: node.opacity,
-          selectable: !node.locked,
-          hasControls: !node.locked,
-        })
-        resolve(img)
-      },
-      { crossOrigin: "anonymous" }
-    )
+  const img = await fabric.Image.fromURL(node.src, undefined, { crossOrigin: "anonymous" })
+
+  if (!img) {
+    throw new Error("Failed to load image")
+  }
+
+  img.set({
+    left: node.x,
+    top: node.y,
+    scaleX: node.width / (img.width || 1),
+    scaleY: node.height / (img.height || 1),
+    angle: node.rotation,
+    opacity: node.opacity,
+    selectable: !node.locked,
+    hasControls: !node.locked,
   })
+
+  return img
 }
 
 /**

@@ -65,7 +65,7 @@ export default function EditorPage() {
     // Final save and navigate back
     updateSlide(slideId, slide)
     console.log("[Editor] Slide saved:", slide.id)
-    router.push("/v2")
+    router.push("/")
   }
 
   if (isLoading || !slide) {
@@ -83,7 +83,7 @@ export default function EditorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/v2")}>
+            <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>

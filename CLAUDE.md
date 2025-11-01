@@ -422,6 +422,7 @@ Professional LinkedIn carousel generator optimized for 1080x1080px square format
 Version 2 represents a complete architectural shift from HTML/CSS rendering to a node-based canvas editor powered by Fabric.js 6. This enables full drag-and-drop editing, real-time canvas manipulation, and multimodal AI integration.
 
 **Key Changes:**
+
 - HTML templates → Canvas nodes
 - html2canvas export → Native Fabric.js export
 - Fixed templates → 7 narrative frameworks
@@ -491,7 +492,7 @@ Version 2 represents a complete architectural shift from HTML/CSS rendering to a
   /v2
     /page.tsx                      # Main generator page
     /editor/[slideId]/page.tsx     # Canvas editor page
-    
+
 /components
   /v2
     /canvas-editor.tsx             # Fabric.js canvas wrapper
@@ -502,7 +503,7 @@ Version 2 represents a complete architectural shift from HTML/CSS rendering to a
       /text-toolbar.tsx            # Font, size, color controls
       /align-toolbar.tsx           # Position & alignment tools
       /add-toolbar.tsx             # Add elements (text, emoji, image)
-      
+
 /lib
   /v2
     /types.ts                      # Node, Slide, Project types
@@ -559,6 +560,7 @@ Seven proven storytelling frameworks for LinkedIn carousels:
    - 7 slides
 
 Each framework includes:
+
 - `promptInstructions`: Specific AI generation instructions
 - `structure`: Slide-by-slide breakdown
 - `bestFor`: Use case guidance
@@ -569,12 +571,14 @@ Each framework includes:
 All visual elements are represented as typed nodes:
 
 **Node Types:**
+
 - `TextNode`: content, fontSize, fontFamily, fontWeight, color, align, lineHeight
 - `EmojiNode`: emoji, fontSize
 - `ImageNode`: src, filters
 - `ShapeNode`: shapeType (rect/circle/line), fill, stroke, strokeWidth
 
 **Base Properties (all nodes):**
+
 - `id`, `type`, `x`, `y`, `width`, `height`
 - `rotation`, `opacity`, `zIndex`, `locked`
 
@@ -583,6 +587,7 @@ All visual elements are represented as typed nodes:
 Bidirectional converters between Node types and Fabric objects:
 
 **Key Functions:**
+
 - `nodeToFabricObject(node)`: Convert node → Fabric.Text/Image/Rect/Circle
 - `fabricObjectToNode(obj)`: Convert Fabric object → typed node
 - `nodeToFabricImageAsync(node)`: Async image loading
@@ -592,6 +597,7 @@ Bidirectional converters between Node types and Fabric objects:
 #### 4. Canvas Editor (`components/v2/canvas-editor.tsx`)
 
 Full-featured Fabric.js canvas with:
+
 - Template background loading
 - Real-time node rendering
 - Modification tracking (object:modified, text:changed events)
@@ -599,6 +605,7 @@ Full-featured Fabric.js canvas with:
 - Global canvas reference for toolbar access
 
 **Lifecycle:**
+
 1. Initialize Fabric.Canvas (1080x1080px)
 2. Load template as background image
 3. Render all nodes as Fabric objects
@@ -609,6 +616,7 @@ Full-featured Fabric.js canvas with:
 #### 5. Toolbars
 
 **Text Toolbar (`components/v2/toolbar/text-toolbar.tsx`):**
+
 - Font family: Inter, Montserrat, Roboto, Playfair Display, Space Grotesk
 - Font size: 12-200px
 - Font weight: 300-900 (6 options)
@@ -616,11 +624,13 @@ Full-featured Fabric.js canvas with:
 - Delete selected element
 
 **Align Toolbar (`components/v2/toolbar/align-toolbar.tsx`):**
+
 - Text alignment: left, center, right
 - Object positioning: 9 positions (left/center/right × top/middle/bottom)
 - Canvas center: center both horizontally and vertically
 
 **Add Toolbar (`components/v2/toolbar/add-toolbar.tsx`):**
+
 - Add text: textarea input → new text node
 - Add emoji: emoji input → new emoji node (large fontSize)
 - Add image: URL input or file upload → new image node
@@ -631,6 +641,7 @@ Full-featured Fabric.js canvas with:
 Native Fabric.js export (no html2canvas):
 
 **Key Functions:**
+
 - `exportSlideToJPEG(slide, filename)`: Export single slide
   - Creates temporary canvas
   - Loads template background
@@ -653,11 +664,13 @@ Native Fabric.js export (no html2canvas):
 Persistence utilities:
 
 **Session Storage (navigation state):**
+
 - `saveSlides(slides)`: Store slides for editor navigation
 - `loadSlides()`: Load slides in editor
 - `updateSlide(slideId, updatedSlide)`: Auto-save modifications
 
 **Local Storage (projects):**
+
 - `saveCurrentProject(project)`: Current project state
 - `loadCurrentProject()`: Restore project
 - `saveToProjectsList(project)`: Add to recent projects (keep last 10)
@@ -671,6 +684,7 @@ Persistence utilities:
 Dynamic prompt generation with narrative-specific instructions:
 
 **Input to Gemini:**
+
 1. Template image (base64-encoded PNG)
 2. Comprehensive text prompt including:
    - Template analysis instructions
@@ -681,6 +695,7 @@ Dynamic prompt generation with narrative-specific instructions:
    - Quality checklist
 
 **Output from Gemini:**
+
 ```json
 {
   "slides": [
@@ -690,8 +705,10 @@ Dynamic prompt generation with narrative-specific instructions:
           "id": "title-1",
           "type": "text",
           "content": "Your Title",
-          "x": 120, "y": 200,
-          "width": 840, "height": 150,
+          "x": 120,
+          "y": 200,
+          "width": 840,
+          "height": 150,
           "fontSize": 64,
           "fontFamily": "Inter",
           "fontWeight": 900,
@@ -715,6 +732,7 @@ Dynamic prompt generation with narrative-specific instructions:
 #### API Client (`lib/v2/ai/gemini-client.ts`)
 
 **Key Features:**
+
 - Model selection: gemini-2.5-flash (default) or gemini-2.5-pro
 - Temperature: 0.7, Max tokens: 8000
 - Multimodal input: image + text in single request
@@ -723,6 +741,7 @@ Dynamic prompt generation with narrative-specific instructions:
 - Error handling: detailed logging, graceful fallbacks
 
 **Validation:**
+
 - Coordinates: x,y within 0-1080
 - Dimensions: width,height positive and within canvas
 - Font size: 12-200px
@@ -746,39 +765,35 @@ Dynamic prompt generation with narrative-specific instructions:
 
 #### Power User Flow (20% of users)
 
-1-6. Same as One-Shot
-7. Click "Edit" on specific slide
-8. Opens canvas editor with Fabric.js
-9. Drag elements, resize, change text
-10. Adjust fonts, colors, alignment
-11. Add emojis or images
-12. Click "Save Changes"
-13. Back to preview, click "Download All"
-14. Done (with customizations)
+1-6. Same as One-Shot 7. Click "Edit" on specific slide 8. Opens canvas editor with Fabric.js 9. Drag elements, resize, change text 10. Adjust fonts, colors, alignment 11. Add emojis or images 12. Click "Save Changes" 13. Back to preview, click "Download All" 14. Done (with customizations)
 
 **Time:** 3-10 minutes total
 
 ### Technical Specifications
 
 **Canvas:**
+
 - Size: 1080x1080px (1:1 square ratio)
 - Background: Template PNG image
 - Objects: Fabric.Text, Fabric.Image, Fabric.Rect, Fabric.Circle
 - Grid: 20px snap-to-grid (optional)
 
 **Export:**
+
 - Format: JPEG
 - Quality: 0.95 (95%)
 - Multiplier: 1x (full resolution)
 - Method: Fabric.Canvas.toDataURL()
 
 **Typography:**
+
 - Fonts: Inter, Montserrat, Roboto, Playfair Display, Space Grotesk
 - Sizes: Title 52-72px, Body 24-36px, Bullets 28-40px, Numbers 80-120px
 - Weights: 300, 400, 500, 600, 700, 900
 - Line height: 1.2-1.7 (varies by type)
 
 **Performance:**
+
 - Generation: 10-30 seconds (depends on Gemini API)
 - Canvas rendering: <100ms per slide
 - Export: ~500ms per slide
@@ -808,12 +823,14 @@ Dynamic prompt generation with narrative-specific instructions:
 ### Migration Path (v1 → v2)
 
 **For users:**
+
 - v1 and v2 are independent (no migration needed)
 - v1 remains accessible at `/` (app/page.tsx)
 - v2 accessible at `/v2` (app/v2/page.tsx)
 - Settings page shared (app/settings/page.tsx)
 
 **For developers:**
+
 - v1 code unchanged in `/app/page.tsx`, `/lib/template-renderer.tsx`
 - v2 code isolated in `/app/v2`, `/lib/v2`, `/components/v2`
 - Shared utilities: `/lib/fetch-url-content.ts`, `/lib/safe-extract-json.ts`
@@ -822,6 +839,7 @@ Dynamic prompt generation with narrative-specific instructions:
 ### Testing v2
 
 **Manual Testing Checklist:**
+
 1. Generate carousel with each narrative framework
 2. Edit slide in canvas editor
 3. Test all toolbar functions (text, align, add)
@@ -834,6 +852,7 @@ Dynamic prompt generation with narrative-specific instructions:
 10. Test with all 5 fonts
 
 **Browser Compatibility:**
+
 - Chrome/Edge: Full support (primary target)
 - Safari: Full support (webkit canvas APIs)
 - Firefox: Full support
@@ -841,17 +860,20 @@ Dynamic prompt generation with narrative-specific instructions:
 ### Deployment Notes
 
 **Build:**
+
 ```bash
 npm run build --webpack  # Force webpack (Fabric.js requires it)
 ```
 
 **Environment:**
+
 - No server-side dependencies
 - All processing client-side
 - API keys in localStorage (browser-only)
 - Gemini API key required (user provides in Settings)
 
 **Performance:**
+
 - First load: ~500KB JS bundle (Fabric.js is large)
 - Canvas operations: GPU-accelerated (smooth at 60fps)
 - Export operations: Async with progress tracking (no UI freeze)
@@ -868,4 +890,3 @@ When working on this project:
 4. **Always format before commit**: `npm run format`
 5. **Test build before deploy**: `npm run build --webpack`
 6. **Document changes**: Update this file (CLAUDE.md) for significant changes
-

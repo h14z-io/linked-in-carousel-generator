@@ -7,8 +7,13 @@ import { nodeToFabricObject, nodeToFabricImageAsync } from "./fabric-utils"
  * Uses Fabric.js native export (no html2canvas needed)
  */
 export async function exportSlideToJPEG(slide: Slide, filename: string): Promise<void> {
-  // Create temporary canvas
-  const canvas = new fabric.Canvas(null, {
+  // Create temporary canvas element
+  const canvasEl = document.createElement("canvas")
+  canvasEl.width = 1080
+  canvasEl.height = 1080
+
+  // Create Fabric canvas
+  const canvas = new fabric.Canvas(canvasEl, {
     width: 1080,
     height: 1080,
     backgroundColor: slide.theme === "dark" ? "#0B0B0E" : "#FFFFFF",
@@ -124,7 +129,13 @@ function delay(ms: number): Promise<void> {
  * Get export preview (smaller version for preview)
  */
 export async function getSlidePreview(slide: Slide): Promise<string> {
-  const canvas = new fabric.Canvas(null, {
+  // Create temporary canvas element
+  const canvasEl = document.createElement("canvas")
+  canvasEl.width = 1080
+  canvasEl.height = 1080
+
+  // Create Fabric canvas
+  const canvas = new fabric.Canvas(canvasEl, {
     width: 1080,
     height: 1080,
     backgroundColor: slide.theme === "dark" ? "#0B0B0E" : "#FFFFFF",
