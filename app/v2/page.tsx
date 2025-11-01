@@ -7,13 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { Sparkles, Loader2, AlertCircle } from "lucide-react"
+import { Sparkles, Loader2, AlertCircle, Download } from "lucide-react"
 import { NarrativeSelector } from "@/components/v2/narrative-selector"
 import { AIControls } from "@/components/v2/ai-controls"
 import { SlidePreview } from "@/components/v2/slide-preview"
 import { generateCarouselNodes } from "@/lib/v2/ai/gemini-client"
 import { getNarrativeStyle } from "@/lib/v2/templates/narrative-definitions"
 import { fetchMultipleUrls } from "@/lib/fetch-url-content"
+import { exportAllSlides } from "@/lib/v2/canvas/export"
+import { saveSlides } from "@/lib/v2/storage"
 import type { Slide, ThemeMode } from "@/lib/v2/types"
 
 export default function V2Page() {
@@ -36,6 +38,8 @@ export default function V2Page() {
   const [hashtags, setHashtags] = useState<string[]>([])
 
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportProgress, setExportProgress] = useState(0)
   const [error, setError] = useState("")
 
   // Handlers
@@ -130,7 +134,7 @@ export default function V2Page() {
     if (!slide) return
 
     // Store slides in sessionStorage for editor access
-    sessionStorage.setItem("v2_slides", JSON.stringify(slides))
+    saveSlides(slides)
 
     // Navigate to editor
     router.push(`/v2/editor/${slide.id}`)
@@ -140,6 +144,31 @@ export default function V2Page() {
     // TODO: Phase 4 - Implement preview modal
     console.log("[v2] View slide:", slideIndex)
     alert(`Full preview modal will be implemented in Phase 4. Viewing slide ${slideIndex + 1}`)
+  }
+
+  const handleExport = async () => {
+    if (slides.length === 0) {
+      setError("No slides to export")
+      return
+    }
+
+    setIsExporting(true)
+    setExportProgress(0)
+    setError("")
+
+    try {
+      await exportAllSlides(slides, (current, total) => {
+        setExportProgress(Math.round((current / total) * 100))
+      })
+
+      console.log("[v2] Export complete")
+    } catch (error) {
+      console.error("[v2] Export failed:", error)
+      setError("Failed to export slides. Please try again.")
+    } finally {
+      setIsExporting(false)
+      setExportProgress(0)
+    }
   }
 
   return (
@@ -240,6 +269,31 @@ export default function V2Page() {
               </CardHeader>
               <CardContent>
                 <SlidePreview slides={slides} onEdit={handleEditSlide} onView={handleViewSlide} />
+                {slides.length > 0 && (
+                  <div className="mt-4">
+                    <Button
+                      onClick={handleExport}
+                      disabled={isExporting}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {isExporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Exporting... {exportProgress}%
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-5 w-5" />
+                          Download All Slides (JPEG)
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      1080x1080px • JPEG • Quality 95%
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

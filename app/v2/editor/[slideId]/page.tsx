@@ -12,6 +12,7 @@ import { TextToolbar } from "@/components/v2/toolbar/text-toolbar"
 import { AlignToolbar } from "@/components/v2/toolbar/align-toolbar"
 import { AddToolbar } from "@/components/v2/toolbar/add-toolbar"
 import type { Slide, Node } from "@/lib/v2/types"
+import { loadSlides, updateSlide } from "@/lib/v2/storage"
 
 export default function EditorPage() {
   const params = useParams()
@@ -22,16 +23,15 @@ export default function EditorPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load slide from sessionStorage
+    // Load slide from storage
     try {
-      const slidesJson = sessionStorage.getItem("v2_slides")
-      if (!slidesJson) {
-        console.error("[Editor] No slides found in sessionStorage")
+      const slides = loadSlides()
+      if (slides.length === 0) {
+        console.error("[Editor] No slides found in storage")
         setIsLoading(false)
         return
       }
 
-      const slides: Slide[] = JSON.parse(slidesJson)
       const foundSlide = slides.find((s) => s.id === slideId)
 
       if (!foundSlide) {
@@ -54,14 +54,17 @@ export default function EditorPage() {
     const updatedSlide = { ...slide, nodes }
     setSlide(updatedSlide)
 
-    // TODO: Persist to storage
+    // Auto-save to storage
+    updateSlide(slideId, updatedSlide)
     console.log("[Editor] Nodes updated:", nodes.length)
   }
 
   const handleSave = () => {
-    // TODO: Save slide to storage and navigate back
-    console.log("[Editor] Saving slide:", slide)
-    alert("Slide saved! (Persistence will be implemented in Phase 4)")
+    if (!slide) return
+
+    // Final save and navigate back
+    updateSlide(slideId, slide)
+    console.log("[Editor] Slide saved:", slide.id)
     router.push("/v2")
   }
 
