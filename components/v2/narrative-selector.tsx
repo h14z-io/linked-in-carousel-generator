@@ -22,7 +22,7 @@ export function NarrativeSelector({ selected, onSelect }: NarrativeSelectorProps
     <div className="space-y-4">
       {/* Compact selector */}
       <Select value={selected} onValueChange={onSelect}>
-        <SelectTrigger className="h-12 text-base font-semibold">
+        <SelectTrigger className="h-12 w-full text-base font-semibold">
           <SelectValue placeholder="Select a narrative framework" />
         </SelectTrigger>
         <SelectContent>

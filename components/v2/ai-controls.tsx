@@ -183,7 +183,7 @@ export function AIControls({
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Language</Label>
             <Select value={language} onValueChange={onLanguageChange}>
-              <SelectTrigger className="h-12 text-base">
+              <SelectTrigger className="h-12 w-full text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -199,7 +199,7 @@ export function AIControls({
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Tone</Label>
             <Select value={tone} onValueChange={onToneChange}>
-              <SelectTrigger className="h-12 text-base">
+              <SelectTrigger className="h-12 w-full text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -215,7 +215,7 @@ export function AIControls({
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Target Audience</Label>
             <Select value={audience} onValueChange={onAudienceChange}>
-              <SelectTrigger className="h-12 text-base">
+              <SelectTrigger className="h-12 w-full text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -231,7 +231,7 @@ export function AIControls({
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Primary Objective</Label>
             <Select value={objective} onValueChange={onObjectiveChange}>
-              <SelectTrigger className="h-12 text-base">
+              <SelectTrigger className="h-12 w-full text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -256,7 +256,7 @@ export function AIControls({
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Technical Depth</Label>
                 <Select value={technicalDepth} onValueChange={onTechnicalDepthChange}>
-                  <SelectTrigger className="h-12 text-base">
+                  <SelectTrigger className="h-12 w-full text-base">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -272,7 +272,7 @@ export function AIControls({
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Theme</Label>
                 <Select value={theme} onValueChange={(v) => onThemeChange(v as "dark" | "light")}>
-                  <SelectTrigger className="h-12 text-base">
+                  <SelectTrigger className="h-12 w-full text-base">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
