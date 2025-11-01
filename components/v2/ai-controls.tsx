@@ -178,7 +178,7 @@ export function AIControls({
 
       {/* Configuration - Grouped by importance */}
       <div className="space-y-5">
-        {/* Primary settings */}
+        {/* All settings in consistent grid */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Language</Label>
@@ -211,10 +211,7 @@ export function AIControls({
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        {/* Secondary settings */}
-        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Target Audience</Label>
             <Select value={audience} onValueChange={onAudienceChange}>
