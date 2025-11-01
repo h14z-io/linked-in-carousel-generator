@@ -32,6 +32,8 @@ interface AIControlsProps {
   onRequiredKeywordsChange: (keywords: string[]) => void
   theme: "dark" | "light"
   onThemeChange: (theme: "dark" | "light") => void
+  slideCount?: number
+  onSlideCountChange?: (count: number) => void
 }
 
 const LANGUAGES = [
@@ -86,6 +88,8 @@ export function AIControls({
   onRequiredKeywordsChange,
   theme,
   onThemeChange,
+  slideCount = 7,
+  onSlideCountChange,
 }: AIControlsProps) {
   const addUrl = () => {
     onSourceUrlsChange([...sourceUrls, ""])
@@ -299,9 +303,9 @@ export function AIControls({
                         placeholder="e.g. automation, AI, cloud"
                         value={keyword}
                         onChange={(e) => updateKeyword(index, e.target.value)}
-                        className="h-11 text-base"
+                        className="h-12 text-base"
                       />
-                      <Button size="icon" variant="ghost" onClick={() => removeKeyword(index)} className="h-11 w-11 flex-shrink-0">
+                      <Button size="icon" variant="ghost" onClick={() => removeKeyword(index)} className="h-12 w-12 flex-shrink-0">
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
@@ -309,6 +313,29 @@ export function AIControls({
                 </div>
               )}
             </div>
+
+            {/* Slide Count */}
+            {onSlideCountChange && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Number of Slides</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min="3"
+                    max="15"
+                    value={slideCount}
+                    onChange={(e) => onSlideCountChange(Math.max(3, Math.min(15, parseInt(e.target.value) || 7)))}
+                    className="h-12 text-base w-24"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Slides (3-15, default: 7)
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Override the default slide count for this narrative framework
+                </p>
+              </div>
+            )}
           </div>
         </details>
       </div>

@@ -102,6 +102,7 @@ export interface AIGenerationRequest {
   requiredKeywords: string[]
   theme: ThemeMode
   templateImage: string // base64 encoded
+  slideCount?: number // Optional override for slide count (default: 7)
 }
 
 export interface AIGenerationResponse {

@@ -8,6 +8,7 @@ import { getNarrativeInstructions } from "../templates/narrative-definitions"
 
 export function buildMultimodalPrompt(request: AIGenerationRequest): string {
   const narrativeInstructions = getNarrativeInstructions(request.narrativeStyle)
+  const slideCount = request.slideCount || 7
 
   return `
 # LinkedIn Carousel Generation Task
@@ -34,6 +35,8 @@ Your task is to generate content that:
 ## Narrative Framework: ${request.narrativeStyle.toUpperCase()}
 
 ${narrativeInstructions}
+
+**IMPORTANT**: Generate exactly **${slideCount} slides** for this carousel.
 
 ---
 

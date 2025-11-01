@@ -32,6 +32,7 @@ export default function V2Page() {
   const [objective, setObjective] = useState("leads")
   const [requiredKeywords, setRequiredKeywords] = useState<string[]>([])
   const [theme, setTheme] = useState<ThemeMode>("dark")
+  const [slideCount, setSlideCount] = useState(7)
 
   const [slides, setSlides] = useState<Slide[]>([])
   const [postCopy, setPostCopy] = useState("")
@@ -123,6 +124,7 @@ export default function V2Page() {
         requiredKeywords: requiredKeywords.filter((k) => k.trim() !== ""),
         theme,
         templateImage,
+        slideCount,
       })
 
       console.log("[v2] Generation complete:", response.slides.length, "slides")
@@ -260,6 +262,8 @@ export default function V2Page() {
                 onRequiredKeywordsChange={setRequiredKeywords}
                 theme={theme}
                 onThemeChange={setTheme}
+                slideCount={slideCount}
+                onSlideCountChange={setSlideCount}
               />
             </div>
 
