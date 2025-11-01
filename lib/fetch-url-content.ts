@@ -1,28 +1,32 @@
 /**
- * Fetches and extracts clean content from URLs using Jina AI Reader
+ * Fetches and extracts clean content from URLs using Jina AI Reader via API route
  * @param url - The URL to fetch content from
  * @returns Clean text content in markdown format
  */
 export async function fetchUrlContent(url: string): Promise<string> {
   try {
-    // Use Jina AI Reader to get clean, readable content
-    const jinaUrl = `https://r.jina.ai/${url}`
-
-    const response = await fetch(jinaUrl, {
+    // Use our API route to proxy the request to Jina AI (avoids CORS issues)
+    const response = await fetch("/api/fetch-url", {
+      method: "POST",
       headers: {
-        Accept: "text/plain",
-        "X-Return-Format": "markdown",
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({ url }),
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
+      const errorData = await response.json()
+      throw new Error(errorData.error || `Failed to fetch ${url}`)
     }
 
-    const content = await response.text()
+    const data = await response.json()
+
+    if (!data.success || !data.content) {
+      throw new Error(`Invalid response from server`)
+    }
 
     // Return the clean content
-    return content.trim()
+    return data.content.trim()
   } catch (error) {
     console.error(`[v0] Error fetching URL ${url}:`, error)
     throw new Error(`No se pudo obtener contenido de ${url}`)

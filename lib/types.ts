@@ -1,8 +1,19 @@
+export type ThemeMode = "dark" | "light"
+
+export interface ThemeColors {
+  background: string
+  surface: string
+  text: string
+  muted: string
+  primary: string
+  border: string
+}
+
 export interface GenerationInput {
   sourceText: string
   sourceUrls: string[]
-  templateId: "template-a" | "template-b" | "template-c" | "template-d" | "template-e"
-  audienceModes: ("finance" | "tech" | "exec" | "managers")[]
+  templateId: "problem-solution" | "transformation" | "educational"
+  audienceMode: "finance" | "tech" | "exec" | "managers"
   slideCount: number
   language: "es" | "en"
   technicalDepth: "basic" | "intermediate" | "advanced"
@@ -10,6 +21,7 @@ export interface GenerationInput {
   copyLength: "short" | "long"
   objective: string
   requiredKeywords: string[]
+  theme: ThemeMode
 }
 
 export interface Slide {

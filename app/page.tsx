@@ -18,6 +18,7 @@ import type { GenerationInput, GenerationState, GenerationResult, Slide } from "
 import { safeExtractJSON } from "@/lib/safe-extract-json"
 import { renderCarouselHTML } from "@/lib/template-renderer"
 import { fetchMultipleUrls, isValidUrl } from "@/lib/fetch-url-content"
+import { buildCarouselPrompt } from "@/lib/prompts/carousel-prompts"
 import { GoogleGenAI } from "@google/genai"
 import html2canvas from "html2canvas"
 import { toJpeg } from "html-to-image"
@@ -31,11 +32,27 @@ import {
 } from "@/components/ui/dialog"
 
 const TEMPLATES = [
-  { id: "template-a", label: "Template A", subtitle: "Minimal Tech" },
-  { id: "template-b", label: "Template B", subtitle: "Bold Magenta" },
-  { id: "template-c", label: "Template C", subtitle: "Editorial Grid" },
-  { id: "template-d", label: "Template D", subtitle: "Data-Driven" },
-  { id: "template-e", label: "Template E", subtitle: "Storytelling" },
+  {
+    id: "problem-solution",
+    label: "Problem-Solution",
+    subtitle: "PAS Framework",
+    description: "Mejor para: Venta directa, generación de leads",
+    structure: "Problema → Agitar → Solución → CTA",
+  },
+  {
+    id: "transformation",
+    label: "Transformation",
+    subtitle: "BAB Framework",
+    description: "Mejor para: Casos de éxito, testimonios, ROI",
+    structure: "Antes → Después → Cómo lograrlo",
+  },
+  {
+    id: "educational",
+    label: "Educational",
+    subtitle: "AIDA Framework",
+    description: "Mejor para: Thought leadership, educar audiencia",
+    structure: "Hook → Insights → Valor → CTA suave",
+  },
 ]
 
 const AUDIENCES = [
@@ -80,15 +97,16 @@ export default function HomePage() {
   const [input, setInput] = useState<GenerationInput>({
     sourceText: "",
     sourceUrls: [],
-    templateId: "template-a",
-    audienceModes: ["tech", "finance", "exec", "managers"],
-    slideCount: 4,
+    templateId: "problem-solution",
+    audienceMode: "tech",
+    slideCount: 7,
     language: "es",
     technicalDepth: "intermediate",
     tone: "conversational",
     copyLength: "short",
     objective: "leads",
     requiredKeywords: [],
+    theme: "dark",
   })
 
   const [generation, setGeneration] = useState<GenerationState>({
@@ -123,10 +141,10 @@ export default function HomePage() {
   // Update preview when fontScale changes
   useEffect(() => {
     if (slidesData.length > 0) {
-      const html = renderCarouselHTML(slidesData, input.templateId, fontScale)
+      const html = renderCarouselHTML(slidesData, input.templateId, fontScale, input.theme)
       setGeneration((prev) => ({ ...prev, htmlPreview: html }))
     }
-  }, [fontScale])
+  }, [fontScale, input.theme])
 
   const handleSourceChange = (value: string) => {
     const lines = value.split("\n").map((s) => s.trim())
@@ -180,16 +198,6 @@ export default function HomePage() {
     setInput((prev) => ({ ...prev, sourceUrls: validUrls }))
   }
 
-  const handleAudienceToggle = (audienceId: string) => {
-    setInput((prev) => {
-      const current = prev.audienceModes
-      const updated = current.includes(audienceId as any)
-        ? current.filter((a) => a !== audienceId)
-        : [...current, audienceId as any]
-      return { ...prev, audienceModes: updated }
-    })
-  }
-
   const addKeyword = () => {
     if (keywordInput.trim() && !input.requiredKeywords.includes(keywordInput.trim())) {
       setInput((prev) => ({
@@ -211,7 +219,7 @@ export default function HomePage() {
     if (slidesData.length === 0) return
 
     console.log("[v0] Changing template to:", newTemplateId)
-    const html = renderCarouselHTML(slidesData, newTemplateId, fontScale)
+    const html = renderCarouselHTML(slidesData, newTemplateId, fontScale, input.theme)
     setGeneration((prev) => ({ ...prev, htmlPreview: html }))
     setInput((prev) => ({ ...prev, templateId: newTemplateId as any }))
   }
@@ -235,26 +243,42 @@ export default function HomePage() {
     const avgBulletsPerSlide = totalBullets / slidesData.length
     const avgBulletLength = totalBulletLength / totalBullets
 
-    // Start with 1.0 scale
+    // Start at 1.0 (normal) since we now design at real 1080x1080 size
+    // Only make minor adjustments within 0.8-1.2 range
     let scale = 1.0
 
-    // Reduce scale if titles are long (>40 chars)
-    if (avgTitleLength > 40) {
-      scale -= (avgTitleLength - 40) * 0.006 // -0.6% per char over 40
+    // Slight increase if titles are short (<30 chars)
+    if (avgTitleLength < 30) {
+      scale += (30 - avgTitleLength) * 0.003 // +0.3% per char under 30
     }
 
-    // Reduce scale if many bullets (>3)
-    if (avgBulletsPerSlide > 3) {
-      scale -= (avgBulletsPerSlide - 3) * 0.08 // -8% per extra bullet
+    // Slight decrease if titles are long (>55 chars)
+    if (avgTitleLength > 55) {
+      scale -= (avgTitleLength - 55) * 0.003 // -0.3% per char over 55
     }
 
-    // Reduce scale if bullets are long (>60 chars)
-    if (avgBulletLength > 60) {
-      scale -= (avgBulletLength - 60) * 0.004 // -0.4% per char over 60
+    // Slight increase if few bullets (<=2)
+    if (avgBulletsPerSlide <= 2) {
+      scale += 0.05 // +5% bonus for fewer bullets
     }
 
-    // Clamp between 0.5 and 2.5
-    return Math.max(0.5, Math.min(2.5, scale))
+    // Slight decrease if many bullets (>4)
+    if (avgBulletsPerSlide > 4) {
+      scale -= (avgBulletsPerSlide - 4) * 0.04 // -4% per extra bullet
+    }
+
+    // Slight increase if bullets are short (<40 chars)
+    if (avgBulletLength < 40) {
+      scale += (40 - avgBulletLength) * 0.002 // +0.2% per char under 40
+    }
+
+    // Slight decrease if bullets are long (>70 chars)
+    if (avgBulletLength > 70) {
+      scale -= (avgBulletLength - 70) * 0.003 // -0.3% per char over 70
+    }
+
+    // Clamp between 0.8 and 1.2 (new minor adjustment range)
+    return Math.max(0.8, Math.min(1.2, scale))
   }
 
   const applyAutoScale = () => {
@@ -353,7 +377,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       setSlidesData(newSlidesData)
 
       // Re-render the carousel with updated slide
-      const html = renderCarouselHTML(newSlidesData, input.templateId, fontScale)
+      const html = renderCarouselHTML(newSlidesData, input.templateId, fontScale, input.theme)
       setGeneration((prev) => ({ ...prev, htmlPreview: html }))
 
       console.log("[v0] Slide edited successfully!")
@@ -389,8 +413,9 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       console.log("[v0] Iniciando generación con modelo:", geminiModel)
       console.log("[v0] Template:", input.templateId)
       console.log("[v0] Slides:", input.slideCount)
-      console.log("[v0] Audiencias:", input.audienceModes)
+      console.log("[v0] Audiencia:", input.audienceMode)
       console.log("[v0] Idioma:", input.language)
+      console.log("[v0] Tema:", input.theme)
 
       let fetchedContent = ""
       if (input.sourceUrls.length > 0) {
@@ -415,184 +440,13 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       }
 
       console.log("[v0] Total corpus length:", corpus.length, "characters")
+      console.log("[v0] Template:", input.templateId)
+      console.log("[v0] Audience:", input.audienceMode)
 
       const ai = new GoogleGenAI({ apiKey })
 
-      const languageInstruction =
-        input.language === "en"
-          ? "Generate the carousel in ENGLISH. All content must be in English."
-          : "Genera el carrusel en ESPAÑOL. Todo el contenido debe estar en español."
-
-      const depthInstructions = {
-        basic:
-          input.language === "en"
-            ? "Use simple, accessible language. Avoid jargon. Focus on high-level concepts and benefits."
-            : "Usa lenguaje simple y accesible. Evita jerga técnica. Enfócate en conceptos de alto nivel y beneficios.",
-        intermediate:
-          input.language === "en"
-            ? "Balance technical details with accessibility. Use some industry terminology but explain key concepts."
-            : "Balancea detalles técnicos con accesibilidad. Usa terminología de la industria pero explica conceptos clave.",
-        advanced:
-          input.language === "en"
-            ? "Use technical depth and industry-specific terminology. Assume expert-level knowledge."
-            : "Usa profundidad técnica y terminología específica de la industria. Asume conocimiento experto.",
-      }
-
-      const toneInstructions = {
-        formal:
-          input.language === "en"
-            ? "Professional, authoritative tone. Use complete sentences and formal language."
-            : "Tono profesional y autoritario. Usa oraciones completas y lenguaje formal.",
-        conversational:
-          input.language === "en"
-            ? "Friendly, approachable tone. Use contractions and direct address. Make it feel like a conversation."
-            : "Tono amigable y cercano. Usa contracciones y dirección directa. Hazlo sentir como una conversación.",
-        inspirational:
-          input.language === "en"
-            ? "Motivating, aspirational tone. Focus on possibilities and transformation. Use powerful, emotive language."
-            : "Tono motivador y aspiracional. Enfócate en posibilidades y transformación. Usa lenguaje poderoso y emotivo.",
-        educational:
-          input.language === "en"
-            ? "Clear, instructive tone. Break down complex ideas. Use examples and analogies."
-            : "Tono claro e instructivo. Desglosa ideas complejas. Usa ejemplos y analogías.",
-      }
-
-      const copyLengthInstructions = {
-        short:
-          input.language === "en"
-            ? "Keep post copies VERY concise (100-150 words). Focus on 1 key insight and clear CTA. Ultra-scannable format."
-            : "Mantén los copys MUY concisos (100-150 palabras). Enfócate en 1 insight clave y CTA claro. Formato ultra-escaneable.",
-        long:
-          input.language === "en"
-            ? "Create focused post copies (200-250 words). Tell a brief story, provide context, and include data points. Stay scannable."
-            : "Crea copys enfocados (200-250 palabras). Cuenta una historia breve, proporciona contexto e incluye datos. Mantén escaneable.",
-      }
-
-      const objectiveInstructions = {
-        leads:
-          input.language === "en"
-            ? "Focus on generating leads. Include clear value propositions and CTAs. Emphasize ROI and business impact."
-            : "Enfócate en generar leads. Incluye propuestas de valor claras y CTAs. Enfatiza ROI e impacto en negocio.",
-        educate:
-          input.language === "en"
-            ? "Focus on educating the audience. Provide actionable insights and practical knowledge. Use data and examples."
-            : "Enfócate en educar a la audiencia. Proporciona insights accionables y conocimiento práctico. Usa datos y ejemplos.",
-        brand:
-          input.language === "en"
-            ? "Focus on brand positioning. Showcase expertise and unique perspective. Build authority and trust."
-            : "Enfócate en posicionamiento de marca. Muestra expertise y perspectiva única. Construye autoridad y confianza.",
-        engagement:
-          input.language === "en"
-            ? "Focus on engagement. Ask questions, encourage discussion. Make content shareable and relatable."
-            : "Enfócate en engagement. Haz preguntas, fomenta discusión. Haz el contenido compartible y relatable.",
-        "thought-leadership":
-          input.language === "en"
-            ? "Focus on thought leadership. Share unique insights and perspectives. Challenge conventional thinking."
-            : "Enfócate en thought leadership. Comparte insights y perspectivas únicas. Desafía el pensamiento convencional.",
-      }
-
-      const keywordsInstruction =
-        input.requiredKeywords.length > 0
-          ? input.language === "en"
-            ? `\nREQUIRED KEYWORDS: You MUST naturally incorporate these keywords: ${input.requiredKeywords.join(", ")}`
-            : `\nPALABRAS CLAVE OBLIGATORIAS: DEBES incorporar naturally estas palabras clave: ${input.requiredKeywords.join(", ")}`
-          : ""
-
-      const audienceDescriptions = {
-        tech:
-          input.language === "en"
-            ? "Technical audience (Developers, Engineers, Architects) - Focus on architecture, implementation details, technical benefits, code quality, and developer experience."
-            : "Audiencia técnica (Developers, Engineers, Architects) - Enfócate en arquitectura, detalles de implementación, beneficios técnicos, calidad de código y experiencia del desarrollador.",
-        finance:
-          input.language === "en"
-            ? "Finance audience (CFOs, Finance Directors) - Focus on ROI, cost savings, budget optimization, financial metrics, and bottom-line impact."
-            : "Audiencia financiera (CFOs, Finance Directors) - Enfócate en ROI, ahorro de costos, optimización de presupuesto, métricas financieras e impacto en resultados.",
-        exec:
-          input.language === "en"
-            ? "Executive audience (CEOs, C-Level) - Focus on strategic vision, business transformation, competitive advantage, market positioning, and long-term value."
-            : "Audiencia ejecutiva (CEOs, C-Level) - Enfócate en visión estratégica, transformación del negocio, ventaja competitiva, posicionamiento en el mercado y valor a largo plazo.",
-        managers:
-          input.language === "en"
-            ? "Manager audience (Team Leads, Directors) - Focus on team productivity, implementation roadmap, change management, resource allocation, and operational efficiency."
-            : "Audiencia de managers (Team Leads, Directors) - Enfócate en productividad del equipo, roadmap de implementación, gestión del cambio, asignación de recursos y eficiencia operacional.",
-      }
-
-      const selectedAudienceInstructions = input.audienceModes
-        .map((mode) => audienceDescriptions[mode as keyof typeof audienceDescriptions])
-        .join("\n- ")
-
-      const prompt = `${languageInstruction}
-
-${input.language === "en" ? "Generate" : "Genera"} ${input.language === "en" ? "a professional LinkedIn carousel in valid JSON format for 1080x1080 SQUARE format." : "un carrusel profesional de LinkedIn en formato JSON válido para formato CUADRADO 1080x1080."}
-
-${input.language === "en" ? "⚠️ CRITICAL: This is a SQUARE format (1080x1080px). Design text to be concise and scannable:" : "⚠️ CRÍTICO: Este es formato CUADRADO (1080x1080px). Diseña el texto para ser conciso y escaneable:"}
-${input.language === "en" ? "- Titles: Maximum 2 lines (50 chars) - must fit in headline space" : "- Títulos: Máximo 2 líneas (50 caracteres) - deben caber en espacio de título"}
-${input.language === "en" ? "- Bullets: Maximum 12 words EACH - highly specific, every word counts" : "- Bullets: Máximo 12 palabras CADA UNO - altamente específicos, cada palabra cuenta"}
-${input.language === "en" ? "- Content must be visual, high-impact, and immediately valuable" : "- El contenido debe ser visual, de alto impacto e inmediatamente valioso"}
-
-${input.language === "en" ? "IMPORTANT: You MUST base the carousel content EXCLUSIVELY on the provided content below. Do NOT make assumptions or use external knowledge. Extract key insights, data, and information directly from the source material." : "IMPORTANTE: DEBES basar el contenido del carrusel EXCLUSIVAMENTE en el contenido proporcionado a continuación. NO hagas suposiciones ni uses conocimiento externo. Extrae insights clave, datos e información directamente del material fuente."}
-
-${input.language === "en" ? "SOURCE CONTENT:" : "CONTENIDO FUENTE:"}
-${corpus}
-
-${input.language === "en" ? "CONTENT STRATEGY:" : "ESTRATEGIA DE CONTENIDO:"}
-- ${input.language === "en" ? "Technical Depth:" : "Profundidad Técnica:"} ${input.technicalDepth.toUpperCase()} - ${depthInstructions[input.technicalDepth]}
-- ${input.language === "en" ? "Tone:" : "Tono:"} ${input.tone.toUpperCase()} - ${toneInstructions[input.tone]}
-- ${input.language === "en" ? "Copy Length:" : "Longitud del Copy:"} ${input.copyLength.toUpperCase()} - ${copyLengthInstructions[input.copyLength]}
-- ${input.language === "en" ? "Objective:" : "Objetivo:"} ${input.objective.toUpperCase()} - ${objectiveInstructions[input.objective]}${keywordsInstruction}
-
-${input.language === "en" ? "CONFIGURATION:" : "CONFIGURACIÓN:"}
-- Template: ${input.templateId}
-- Slides: ${input.slideCount}
-- ${input.language === "en" ? "Audiences:" : "Audiencias:"} ${input.audienceModes.join(", ")}
-- ${input.language === "en" ? "Language:" : "Idioma:"} ${input.language === "en" ? "English" : "Español"}
-
-${input.language === "en" ? "AUDIENCE TARGETING:" : "SEGMENTACIÓN DE AUDIENCIAS:"}
-${input.language === "en" ? "Create distinct post copies for each audience. Each copy should be SIGNIFICANTLY different, not just minor tweaks:" : "Crea copys distintos para cada audiencia. Cada copy debe ser SIGNIFICATIVAMENTE diferente, no solo ajustes menores:"}
-- ${selectedAudienceInstructions}
-
-${input.language === "en" ? "COPYWRITING BEST PRACTICES:" : "MEJORES PRÁCTICAS DE COPYWRITING:"}
-1. ${input.language === "en" ? "Use the AIDA framework (Attention, Interest, Desire, Action)" : "Usa el framework AIDA (Atención, Interés, Deseo, Acción)"}
-2. ${input.language === "en" ? "Start with a hook - address a pain point or ask a compelling question" : "Comienza con un gancho - aborda un pain point o haz una pregunta convincente"}
-3. ${input.language === "en" ? "Use specific numbers and data points from the source content" : "Usa números específicos y datos del contenido fuente"}
-4. ${input.language === "en" ? "Each bullet should start with an action verb" : "Cada bullet debe comenzar con un verbo de acción"}
-5. ${input.language === "en" ? "Include social proof or credibility indicators from the source" : "Incluye prueba social o indicadores de credibilidad del contenido fuente"}
-6. ${input.language === "en" ? "End with a clear, specific CTA" : "Termina con un CTA claro y específico"}
-
-${input.language === "en" ? "SLIDE STRUCTURE (1080x1080 SQUARE FORMAT):" : "ESTRUCTURA DE SLIDES (FORMATO 1080x1080 CUADRADO):"}
-- Slide 1: ${input.language === "en" ? "Hook - Compelling title (max 2 lines) + problem/opportunity from source" : "Gancho - Título convincente (máx 2 líneas) + problema/oportunidad del contenido fuente"}
-- Slides 2-${input.slideCount - 1}: ${input.language === "en" ? "Value - Clear title + 3-4 concise bullets (max 12 words each) with data from source" : "Valor - Título claro + 3-4 bullets concisos (máx 12 palabras c/u) con datos del contenido fuente"}
-- Slide ${input.slideCount}: ${input.language === "en" ? "CTA - Bold title + 2-3 action items. Ends with clear call-to-action" : "CTA - Título audaz + 2-3 items de acción. Termina con CTA claro"}
-
-${input.language === "en" ? "REQUIRED JSON FORMAT:" : "FORMATO JSON REQUERIDO:"}
-{
-  "slides": [
-    {
-      "title": "${input.language === "en" ? "Problem or Insight Hook" : "Gancho: Problema o Insight"}",
-      "bullets": ["${input.language === "en" ? "Specific stat from source (max 12 words)" : "Estadística específica del contenido (máx 12 palabras)"}", "${input.language === "en" ? "Pain point or opportunity (concise)" : "Pain point u oportunidad (conciso)"}", "${input.language === "en" ? "Why this matters now (direct, brief)" : "Por qué importa ahora (directo, breve)"}"],
-      "visual_direction": "${input.language === "en" ? "Highlight the problem visually. Use contrast and emphasis." : "Destaca el problema visualmente. Usa contraste y énfasis."}"
-    }
-  ],
-  "post_copies": [
-    {"audience": "tech", "text": "${input.language === "en" ? "Technical architecture and implementation copy" : "Copy de arquitectura técnica e implementación"}"},
-    {"audience": "finance", "text": "${input.language === "en" ? "ROI-focused copy with financial metrics" : "Copy enfocado en ROI con métricas financieras"}"},
-    {"audience": "exec", "text": "${input.language === "en" ? "Strategic vision and transformation copy" : "Copy de visión estratégica y transformación"}"},
-    {"audience": "managers", "text": "${input.language === "en" ? "Team productivity and implementation copy" : "Copy de productividad del equipo e implementación"}"}
-  ],
-  "hashtags": ["#RelevantTag1", "#IndustrySpecific2", "#TrendingTopic3"],
-  "schedule_suggestions": ["${input.language === "en" ? "Tuesday 10:00 AM EST" : "Martes 10:00 -06:00"}", "${input.language === "en" ? "Thursday 2:00 PM EST" : "Jueves 14:00 -06:00"}"]
-}
-
-${input.language === "en" ? "QUALITY CRITERIA FOR SQUARE FORMAT (1080x1080):" : "CRITERIOS DE CALIDAD PARA FORMATO CUADRADO (1080x1080):"}
-- ${input.language === "en" ? "TITLES: Max 2 lines (~50 characters). Compelling and specific, not generic" : "TÍTULOS: Máx 2 líneas (~50 caracteres). Convincentes y específicos, no genéricos"}
-- ${input.language === "en" ? "BULLETS: 3-4 bullets per slide, max 12 words EACH. Every word must add value" : "BULLETS: 3-4 bullets por slide, máx 12 palabras CADA UNO. Cada palabra debe agregar valor"}
-- ${input.language === "en" ? "DATA: Use concrete numbers/metrics FROM SOURCE ONLY, not invented statistics" : "DATOS: Usa números/métricas concretos SOLO DEL CONTENIDO FUENTE, no estadísticas inventadas"}
-- ${input.language === "en" ? "SCANNABILITY: Text must be scannable at a glance - use action verbs and short chunks" : "ESCANIBILIDAD: El texto debe ser escaneable de un vistazo - usa verbos de acción y fragmentos cortos"}
-- ${input.language === "en" ? "AUDIENCE COPIES: SIGNIFICANTLY different by audience - different angle, different CTA, different focus" : "COPYS POR AUDIENCIA: SIGNIFICATIVAMENTE diferente por audiencia - ángulo diferente, CTA diferente, enfoque diferente"}
-- ${input.language === "en" ? "Hashtags: Mix niche industry terms (3) with broader topics (2) - total max 5 hashtags" : "Hashtags: Mezcla términos de nicho (3) con temas más amplios (2) - máx 5 hashtags totales"}
-- ${input.language === "en" ? "Schedule: Optimal LinkedIn times based on audience timezone and engagement patterns" : "Horarios: Tiempos óptimos de LinkedIn según zona horaria de audiencia y patrones de engagement"}
-
-${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no explanations, just the JSON object:" : "Responde SOLO con el JSON válido. Sin markdown, sin explicaciones, solo el objeto JSON:"}`
+      // Use the new prompt builder system
+      const prompt = buildCarouselPrompt(input, corpus)
 
       const response = await ai.models.generateContent({
         model: geminiModel,
@@ -656,7 +510,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
       setSlidesData(payload.slides)
 
       console.log("[v0] Rendering carousel HTML...")
-      const html = renderCarouselHTML(payload.slides, input.templateId, fontScale)
+      const html = renderCarouselHTML(payload.slides, input.templateId, fontScale, input.theme)
 
       setGeneration({
         htmlPreview: html,
@@ -702,7 +556,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
     if (!generation.htmlPreview) return
 
     try {
-      console.log("[v0] Starting JPEG export (html-to-image)...")
+      console.log("[v0] Starting PNG export (html2canvas)...")
 
       const iframe = document.createElement("iframe")
       iframe.style.position = "fixed"
@@ -775,7 +629,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
     if (!generation.htmlPreview) return
 
     try {
-      console.log("[v0] Starting JPEG export (html2canvas)...")
+      console.log("[v0] Starting HIGH-QUALITY PNG export (html2canvas - optimized for LinkedIn)...")
 
       const iframe = document.createElement("iframe")
       iframe.style.position = "fixed"
@@ -791,7 +645,8 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
       iframe.contentDocument?.write(generation.htmlPreview)
       iframe.contentDocument?.close()
 
-      await new Promise((resolve) => setTimeout(resolve, 3500))
+      // Increased wait time for fonts and resources to load completely
+      await new Promise((resolve) => setTimeout(resolve, 5000))
 
       const iframeDoc = iframe.contentDocument
       if (!iframeDoc) {
@@ -805,48 +660,56 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
         throw new Error("No se encontraron slides para descargar")
       }
 
+      // Calculate optimal scale for high-DPI displays (retina, 4K, etc)
+      const devicePixelRatio = window.devicePixelRatio || 1
+      const optimalScale = Math.max(4, devicePixelRatio * 2)
+
+      console.log(`[v0] Using scale: ${optimalScale}x (devicePixelRatio: ${devicePixelRatio})`)
+
       for (let i = 0; i < slides.length; i++) {
         const slide = slides[i] as HTMLElement
-        console.log(`[v0] Rendering slide ${i + 1}/${slides.length} to JPEG...`)
+        console.log(`[v0] Rendering slide ${i + 1}/${slides.length} to HIGH-QUALITY PNG...`)
 
         const canvas = await html2canvas(slide, {
           width: 1080,
           height: 1080,
-          scale: 3,
-          backgroundColor: "#0B0B0E",
+          scale: optimalScale,
+          backgroundColor: input.theme === "dark" ? "#0B0B0E" : "#FFFFFF",
           logging: false,
           useCORS: true,
           allowTaint: true,
           windowHeight: 1080,
           windowWidth: 1080,
+          imageTimeout: 0,
+          removeContainer: true,
         })
 
+        // Export as PNG for maximum text sharpness and quality
         await new Promise<void>((resolve, reject) => {
           canvas.toBlob(
             (blob) => {
               if (blob) {
                 const url = URL.createObjectURL(blob)
                 const link = document.createElement("a")
-                link.download = `carousel-slide-${i + 1}.jpg`
+                link.download = `carousel-slide-${String(i + 1).padStart(2, "0")}.png`
                 link.href = url
                 link.click()
                 URL.revokeObjectURL(url)
-                console.log(`[v0] Slide ${i + 1} exported: ${(blob.size / 1024).toFixed(2)}KB`)
+                console.log(`[v0] Slide ${i + 1} exported: ${(blob.size / 1024).toFixed(2)}KB (PNG ${optimalScale}x)`)
                 resolve()
               } else {
                 reject(new Error(`Failed to export slide ${i + 1}`))
               }
             },
-            "image/jpeg",
-            0.95,
+            "image/png",
           )
         })
 
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        await new Promise((resolve) => setTimeout(resolve, 800))
       }
 
       document.body.removeChild(iframe)
-      console.log("[v0] All slides exported successfully as JPEG (1080x1350)")
+      console.log(`[v0] All slides exported successfully as HIGH-QUALITY PNG (${optimalScale}x scale)`)
     } catch (error) {
       console.error("[v0] html2canvas export error:", error)
       setError(
@@ -983,141 +846,6 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
               </div>
 
               <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Diseño Visual</h3>
-                  <p className="text-sm text-muted-foreground">Selecciona la plantilla de diseño para tus slides</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground">Plantilla</Label>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                    {TEMPLATES.map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => setInput((prev) => ({ ...prev, templateId: t.id as any }))}
-                        className={`group relative overflow-hidden rounded-lg border-2 transition-all ${
-                          input.templateId === t.id
-                            ? "border-primary shadow-lg shadow-primary/20"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <div className="h-32 bg-secondary p-3">
-                          {/* Template A - Minimal */}
-                          {t.id === "template-a" && (
-                            <div className="flex h-full flex-col justify-between rounded border border-border/50 bg-background p-2">
-                              <div className="space-y-1">
-                                <div className="h-1 w-4 rounded bg-primary/60" />
-                                <div className="h-1.5 w-full rounded bg-foreground/80" />
-                                <div className="space-y-0.5">
-                                  <div className="h-0.5 w-full rounded bg-muted-foreground/40" />
-                                  <div className="h-0.5 w-full rounded bg-muted-foreground/40" />
-                                  <div className="h-0.5 w-3/4 rounded bg-muted-foreground/40" />
-                                </div>
-                              </div>
-                              <div className="h-px w-full rounded bg-border" />
-                            </div>
-                          )}
-
-                          {/* Template B - Bold Magenta (Improved) */}
-                          {t.id === "template-b" && (
-                            <div className="flex h-full gap-1">
-                              <div className="w-1 rounded bg-primary" />
-                              <div className="flex flex-1 flex-col justify-between rounded border border-border/50 bg-background p-2 shadow-md shadow-primary/10">
-                                <div className="space-y-1">
-                                  <div className="h-1 w-4 rounded bg-primary" />
-                                  <div className="relative h-1.5 w-full rounded bg-foreground/80">
-                                    <div className="absolute -bottom-1 left-0 h-0.5 w-8 rounded bg-primary" />
-                                  </div>
-                                  <div className="space-y-0.5">
-                                    <div className="flex items-center gap-1">
-                                      <div className="h-1 w-1 rounded-full bg-primary" />
-                                      <div className="h-0.5 flex-1 rounded bg-muted-foreground/60" />
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <div className="h-1 w-1 rounded-full bg-primary" />
-                                      <div className="h-0.5 flex-1 rounded bg-muted-foreground/60" />
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="h-px w-full rounded bg-border" />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Template C - Editorial */}
-                          {t.id === "template-c" && (
-                            <div className="flex h-full gap-1">
-                              <div className="w-1 rounded bg-primary" />
-                              <div className="flex flex-1 flex-col justify-between rounded bg-background p-2">
-                                <div className="space-y-1">
-                                  <div className="h-1 w-4 rounded bg-primary/60" />
-                                  <div className="h-1.5 w-full rounded bg-foreground/80 font-serif italic" />
-                                  <div className="space-y-0.5">
-                                    <div className="h-0.5 w-full rounded bg-muted-foreground/40" />
-                                    <div className="h-0.5 w-full rounded bg-muted-foreground/40" />
-                                    <div className="h-0.5 w-2/3 rounded bg-muted-foreground/40" />
-                                  </div>
-                                </div>
-                                <div className="h-px w-full rounded bg-border" />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Template D - Data-Driven preview */}
-                          {t.id === "template-d" && (
-                            <div className="flex h-full flex-col justify-between rounded-lg border-2 border-border/50 bg-gradient-to-br from-background to-primary/5 p-2">
-                              <div className="space-y-1">
-                                <div className="h-2 w-6 rounded bg-primary shadow-sm shadow-primary/30" />
-                                <div className="h-2 w-full rounded bg-foreground/90 font-bold" />
-                                <div className="space-y-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <div className="text-[8px] text-primary">▸</div>
-                                    <div className="h-0.5 flex-1 rounded bg-foreground/70" />
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <div className="text-[8px] text-primary">▸</div>
-                                    <div className="h-0.5 flex-1 rounded bg-foreground/70" />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="h-px w-full rounded bg-border" />
-                            </div>
-                          )}
-
-                          {/* Template E - Storytelling preview */}
-                          {t.id === "template-e" && (
-                            <div className="flex h-full flex-col justify-between rounded-lg bg-gradient-to-b from-background to-background/95 p-2 shadow-lg">
-                              <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary via-pink-500 to-primary" />
-                              <div className="space-y-1 pt-1">
-                                <div className="h-1 w-3 rounded bg-primary/60 text-[8px]" />
-                                <div className="h-2 w-full rounded bg-gradient-to-r from-foreground/90 to-muted-foreground/70" />
-                                <div className="space-y-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <div className="text-[8px] text-primary">→</div>
-                                    <div className="h-0.5 flex-1 rounded bg-muted-foreground/60" />
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <div className="text-[8px] text-primary">→</div>
-                                    <div className="h-0.5 flex-1 rounded bg-muted-foreground/60" />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="h-px w-full rounded bg-primary/20" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="bg-secondary/50 px-2 py-1.5 text-center">
-                          <div className="text-[11px] font-semibold text-foreground">{t.label}</div>
-                          <div className="text-[9px] text-muted-foreground">{t.subtitle}</div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
 
               <Separator className="bg-border" />
 
@@ -1283,31 +1011,39 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Audiencias</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Audiencia</h3>
                   <p className="text-sm text-muted-foreground">
-                    Genera versiones del post copy adaptadas para diferentes audiencias
+                    Selecciona la audiencia principal para el contenido
                   </p>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
                   {AUDIENCES.map((audience) => (
-                    <div key={audience.id} className="flex items-start gap-3">
-                      <Checkbox
-                        id={audience.id}
-                        checked={input.audienceModes.includes(audience.id as any)}
-                        onCheckedChange={() => handleAudienceToggle(audience.id)}
-                        className="border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                      />
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor={audience.id}
-                          className="text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {audience.label}
-                        </label>
-                        <p className="text-xs text-muted-foreground">{audience.description}</p>
+                    <button
+                      key={audience.id}
+                      onClick={() => setInput((prev) => ({ ...prev, audienceMode: audience.id as any }))}
+                      className={`flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${
+                        input.audienceMode === audience.id
+                          ? "border-primary bg-primary/5 shadow-md"
+                          : "border-border hover:border-primary/50 bg-secondary/30"
+                      }`}
+                    >
+                      <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                        input.audienceMode === audience.id
+                          ? "border-primary"
+                          : "border-muted-foreground/40"
+                      }`}>
+                        {input.audienceMode === audience.id && (
+                          <div className="h-2 w-2 rounded-full bg-primary" />
+                        )}
                       </div>
-                    </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium leading-none text-foreground">
+                          {audience.label}
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">{audience.description}</p>
+                      </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -1325,12 +1061,14 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
                   <Slider
                     value={[input.slideCount]}
                     onValueChange={([v]) => setInput((prev) => ({ ...prev, slideCount: v }))}
-                    min={3}
-                    max={7}
+                    min={5}
+                    max={10}
                     step={1}
                     className="w-full [&_[role=slider]]:border-primary [&_[role=slider]]:bg-primary"
                   />
-                  <p className="text-xs text-muted-foreground">Selecciona entre 3 y 7 slides para tu carrusel</p>
+                  <p className="text-xs text-muted-foreground">
+                    LinkedIn recomienda 5-10 slides para máximo engagement (24.42% vs 6.67%)
+                  </p>
                 </div>
               </div>
 
@@ -1366,25 +1104,63 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
             <div className="space-y-6">
               <Card className="border-border bg-card">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-3">
                     <div>
                       <CardTitle>Vista Previa</CardTitle>
                       <CardDescription>Preview interactivo del carrusel generado</CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm text-muted-foreground">Cambiar plantilla:</Label>
-                      <div className="flex gap-1">
-                        {TEMPLATES.map((t) => (
-                          <Button
-                            key={t.id}
-                            variant={input.templateId === t.id ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => changeTemplate(t.id)}
-                            className="h-8 px-3"
+
+                    {/* Template & Theme Selectors */}
+                    <div className="flex flex-wrap items-center gap-4">
+                      {/* Template Selector with thumbnails */}
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">Plantilla:</Label>
+                        <div className="flex gap-1">
+                          {TEMPLATES.map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => changeTemplate(t.id)}
+                              className={`group relative px-3 py-1.5 rounded-md border-2 transition-all text-xs font-medium ${
+                                input.templateId === t.id
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border hover:border-primary/50 text-muted-foreground"
+                              }`}
+                              title={t.description}
+                            >
+                              <span className="hidden sm:inline">{t.label}</span>
+                              <span className="sm:hidden">{t.label.split(" ")[1]}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Theme Selector */}
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">Tema:</Label>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => setInput((prev) => ({ ...prev, theme: "dark" }))}
+                            className={`px-3 py-1.5 rounded-md border-2 transition-all flex items-center gap-1.5 ${
+                              input.theme === "dark"
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/50"
+                            }`}
                           >
-                            {t.label.split(" ")[1]}
-                          </Button>
-                        ))}
+                            <div className="h-3 w-3 rounded bg-gradient-to-br from-[#0B0B0E] to-[#15151A] border border-border" />
+                            <span className="text-xs font-medium text-foreground">Dark</span>
+                          </button>
+                          <button
+                            onClick={() => setInput((prev) => ({ ...prev, theme: "light" }))}
+                            className={`px-3 py-1.5 rounded-md border-2 transition-all flex items-center gap-1.5 ${
+                              input.theme === "light"
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className="h-3 w-3 rounded bg-gradient-to-br from-white to-[#F5F5F7] border border-border" />
+                            <span className="text-xs font-medium text-foreground">Light</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1418,15 +1194,15 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
                       <Slider
                         value={[fontScale]}
                         onValueChange={(v) => setFontScale(v[0])}
-                        min={0.5}
-                        max={2.5}
-                        step={0.05}
+                        min={0.8}
+                        max={1.2}
+                        step={0.02}
                         className="w-full"
                       />
                       <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>0.5x - Muy pequeño</span>
+                        <span>0.8x - Pequeño</span>
                         <span>1.0x - Normal</span>
-                        <span>2.5x - Muy grande</span>
+                        <span>1.2x - Grande</span>
                       </div>
                     </div>
                     <div className="flex justify-center">
@@ -1446,12 +1222,12 @@ ${input.language === "en" ? "Respond ONLY with valid JSON. No markdown, no expla
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground text-center">
-                      Preview (escalado) • Descarga: 1080×1080px JPEG (Cuadrado)
+                      Preview (escalado) • Descarga: 1080×1080px PNG (Cuadrado)
                     </p>
                     <div className="flex gap-2">
                       <Button variant="outline" className="flex-1 bg-transparent" size="sm" onClick={downloadImages}>
                         <Download className="mr-2 h-4 w-4" />
-                        Descargar Imágenes (1080x1080 JPEG)
+                        Descargar Imágenes (1080x1080 PNG)
                       </Button>
                     </div>
 

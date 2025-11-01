@@ -11,12 +11,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Settings, Key, Palette, Zap, Save, CheckCircle2, ExternalLink, Download } from "lucide-react"
 
+// Default theme colors matching template-renderer.tsx
+const DEFAULT_DARK_COLORS = {
+  bg: "#0B0B0E",
+  surf: "#15151A",
+  txt: "#EAEAF0",
+  mut: "#B9B9C6",
+  pri: "#BB2649",
+  border: "#2A2A33",
+}
+
+const DEFAULT_LIGHT_COLORS = {
+  bg: "#FFFFFF",
+  surf: "#F5F5F7",
+  txt: "#1A1A1A",
+  mut: "#666666",
+  pri: "#BB2649",
+  border: "#E0E0E0",
+}
+
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState("")
   const [brandName, setBrandName] = useState("h14z.io")
   const [brandColor, setBrandColor] = useState("#BB2649")
   const [geminiModel, setGeminiModel] = useState("gemini-2.5-flash")
   const [exportEngine, setExportEngine] = useState("html2canvas")
+  const [darkColors, setDarkColors] = useState(DEFAULT_DARK_COLORS)
+  const [lightColors, setLightColors] = useState(DEFAULT_LIGHT_COLORS)
   const [saved, setSaved] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -29,11 +50,31 @@ export default function SettingsPage() {
     const savedGeminiModel = localStorage.getItem("geminiModel") || "gemini-2.5-flash"
     const savedExportEngine = localStorage.getItem("exportEngine") || "html2canvas"
 
+    // Load theme colors
+    const savedDarkColors = localStorage.getItem("darkColors")
+    const savedLightColors = localStorage.getItem("lightColors")
+
     setApiKey(savedApiKey)
     setBrandName(savedBrandName)
     setBrandColor(savedBrandColor)
     setGeminiModel(savedGeminiModel)
     setExportEngine(savedExportEngine)
+
+    if (savedDarkColors) {
+      try {
+        setDarkColors(JSON.parse(savedDarkColors))
+      } catch (e) {
+        console.error("Error parsing dark colors:", e)
+      }
+    }
+
+    if (savedLightColors) {
+      try {
+        setLightColors(JSON.parse(savedLightColors))
+      } catch (e) {
+        console.error("Error parsing light colors:", e)
+      }
+    }
   }, [])
 
   const handleSave = () => {
@@ -42,6 +83,8 @@ export default function SettingsPage() {
     localStorage.setItem("brandColor", brandColor)
     localStorage.setItem("geminiModel", geminiModel)
     localStorage.setItem("exportEngine", exportEngine)
+    localStorage.setItem("darkColors", JSON.stringify(darkColors))
+    localStorage.setItem("lightColors", JSON.stringify(lightColors))
 
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -62,7 +105,7 @@ export default function SettingsPage() {
 
         <div className="mx-auto max-w-3xl">
           <Tabs defaultValue="api" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="api" className="flex items-center gap-2">
                 <Key className="h-4 w-4" />
                 API Key
@@ -74,6 +117,10 @@ export default function SettingsPage() {
               <TabsTrigger value="export" className="flex items-center gap-2">
                 <Download className="h-4 w-4" />
                 Exportar
+              </TabsTrigger>
+              <TabsTrigger value="themes" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                Temas
               </TabsTrigger>
               <TabsTrigger value="brand" className="flex items-center gap-2">
                 <Palette className="h-4 w-4" />
@@ -221,8 +268,8 @@ export default function SettingsPage() {
                       <SelectContent className="border-border bg-card">
                         <SelectItem value="html2canvas">
                           <div className="flex flex-col">
-                            <span className="font-medium">html2canvas (JPEG)</span>
-                            <span className="text-xs text-muted-foreground">(Recomendado) - Rápido y estable</span>
+                            <span className="font-medium">html2canvas (PNG)</span>
+                            <span className="text-xs text-muted-foreground">(Recomendado) - Alta calidad, texto sharp</span>
                           </div>
                         </SelectItem>
                         <SelectItem value="html-to-image">
@@ -238,12 +285,12 @@ export default function SettingsPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="rounded-lg border border-border bg-secondary/50 p-4">
-                      <h4 className="mb-2 font-semibold text-foreground">html2canvas (JPEG)</h4>
+                      <h4 className="mb-2 font-semibold text-foreground">html2canvas (PNG)</h4>
                       <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>✓ Rápido y confiable</li>
-                        <li>✓ JPEG con calidad 0.95</li>
-                        <li>✓ Escala 3x para nitidez</li>
-                        <li>✓ Mejor para web</li>
+                        <li>✓ Máxima calidad de texto</li>
+                        <li>✓ PNG sin compresión</li>
+                        <li>✓ Escala 4-5x para retina</li>
+                        <li>✓ Auto-ajuste DPI</li>
                         <li className="pt-2">Recomendado para LinkedIn</li>
                       </ul>
                     </div>
@@ -262,14 +309,286 @@ export default function SettingsPage() {
                   <Alert className="border-primary/20 bg-primary/5">
                     <Download className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-sm">
-                      <p className="font-medium text-foreground">Motor Actual: {exportEngine === "html2canvas" ? "html2canvas (JPEG)" : "html-to-image"}</p>
+                      <p className="font-medium text-foreground">Motor Actual: {exportEngine === "html2canvas" ? "html2canvas (PNG)" : "html-to-image"}</p>
                       <p className="mt-1 text-muted-foreground">
                         {exportEngine === "html2canvas"
-                          ? "Exportando con html2canvas en formato JPEG (calidad 0.95, escala 3x)."
+                          ? "Exportando con html2canvas en formato PNG (escala 4-5x retina, auto-DPI, máxima calidad de texto)."
                           : "Exportando con html-to-image (máxima flexibilidad)."}
                       </p>
                     </AlertDescription>
                   </Alert>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="themes" className="space-y-6">
+              <Card className="border-border bg-card">
+                <CardHeader>
+                  <CardTitle>Colores de Tema Oscuro</CardTitle>
+                  <CardDescription>
+                    Personaliza la paleta de colores para el tema oscuro
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="dark-bg">Fondo (bg)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="dark-bg"
+                          type="color"
+                          value={darkColors.bg}
+                          onChange={(e) => setDarkColors({ ...darkColors, bg: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={darkColors.bg}
+                          onChange={(e) => setDarkColors({ ...darkColors, bg: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dark-surf">Superficie (surf)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="dark-surf"
+                          type="color"
+                          value={darkColors.surf}
+                          onChange={(e) => setDarkColors({ ...darkColors, surf: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={darkColors.surf}
+                          onChange={(e) => setDarkColors({ ...darkColors, surf: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dark-txt">Texto (txt)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="dark-txt"
+                          type="color"
+                          value={darkColors.txt}
+                          onChange={(e) => setDarkColors({ ...darkColors, txt: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={darkColors.txt}
+                          onChange={(e) => setDarkColors({ ...darkColors, txt: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dark-mut">Texto Muted (mut)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="dark-mut"
+                          type="color"
+                          value={darkColors.mut}
+                          onChange={(e) => setDarkColors({ ...darkColors, mut: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={darkColors.mut}
+                          onChange={(e) => setDarkColors({ ...darkColors, mut: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dark-pri">Primario (pri)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="dark-pri"
+                          type="color"
+                          value={darkColors.pri}
+                          onChange={(e) => setDarkColors({ ...darkColors, pri: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={darkColors.pri}
+                          onChange={(e) => setDarkColors({ ...darkColors, pri: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dark-border">Borde (border)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="dark-border"
+                          type="color"
+                          value={darkColors.border}
+                          onChange={(e) => setDarkColors({ ...darkColors, border: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={darkColors.border}
+                          onChange={(e) => setDarkColors({ ...darkColors, border: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => setDarkColors(DEFAULT_DARK_COLORS)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Restaurar Valores por Defecto
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card">
+                <CardHeader>
+                  <CardTitle>Colores de Tema Claro</CardTitle>
+                  <CardDescription>
+                    Personaliza la paleta de colores para el tema claro
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="light-bg">Fondo (bg)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="light-bg"
+                          type="color"
+                          value={lightColors.bg}
+                          onChange={(e) => setLightColors({ ...lightColors, bg: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={lightColors.bg}
+                          onChange={(e) => setLightColors({ ...lightColors, bg: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="light-surf">Superficie (surf)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="light-surf"
+                          type="color"
+                          value={lightColors.surf}
+                          onChange={(e) => setLightColors({ ...lightColors, surf: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={lightColors.surf}
+                          onChange={(e) => setLightColors({ ...lightColors, surf: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="light-txt">Texto (txt)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="light-txt"
+                          type="color"
+                          value={lightColors.txt}
+                          onChange={(e) => setLightColors({ ...lightColors, txt: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={lightColors.txt}
+                          onChange={(e) => setLightColors({ ...lightColors, txt: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="light-mut">Texto Muted (mut)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="light-mut"
+                          type="color"
+                          value={lightColors.mut}
+                          onChange={(e) => setLightColors({ ...lightColors, mut: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={lightColors.mut}
+                          onChange={(e) => setLightColors({ ...lightColors, mut: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="light-pri">Primario (pri)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="light-pri"
+                          type="color"
+                          value={lightColors.pri}
+                          onChange={(e) => setLightColors({ ...lightColors, pri: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={lightColors.pri}
+                          onChange={(e) => setLightColors({ ...lightColors, pri: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="light-border">Borde (border)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="light-border"
+                          type="color"
+                          value={lightColors.border}
+                          onChange={(e) => setLightColors({ ...lightColors, border: e.target.value })}
+                          className="h-10 w-16 cursor-pointer bg-secondary p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={lightColors.border}
+                          onChange={(e) => setLightColors({ ...lightColors, border: e.target.value })}
+                          className="flex-1 bg-secondary font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => setLightColors(DEFAULT_LIGHT_COLORS)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Restaurar Valores por Defecto
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

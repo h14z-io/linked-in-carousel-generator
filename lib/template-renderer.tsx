@@ -1,170 +1,117 @@
-import type { Slide } from "./types"
+import type { Slide, ThemeMode } from "./types"
 
-// Lucide icon SVGs as strings
+// Lucide icon SVGs as strings (without width/height to allow CSS sizing)
 const ICONS = {
-  trendingUp: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
-  barChart: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>`,
-  target: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
-  zap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
-  lightbulb: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
-  rocket: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
-  sparkles: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
-  checkCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
-  arrowRight: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+  alert: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+  checkCircle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  trendingUp: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+  arrowRight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+  lightbulb: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+  sparkles: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
 }
 
-function getIconForSlide(templateId: string, slideIndex: number, totalSlides: number): string {
-  if (templateId === "template-d") {
-    // Data-driven icons
-    const dataIcons = [ICONS.target, ICONS.barChart, ICONS.trendingUp, ICONS.checkCircle, ICONS.zap]
-    return dataIcons[slideIndex % dataIcons.length]
-  } else if (templateId === "template-e") {
-    // Storytelling icons
-    const storyIcons = [ICONS.lightbulb, ICONS.sparkles, ICONS.rocket, ICONS.checkCircle, ICONS.arrowRight]
-    return storyIcons[slideIndex % storyIcons.length]
-  } else if (templateId === "template-b") {
-    // Bold magenta - use accent icons
-    return ICONS.zap
-  } else if (templateId === "template-c") {
-    // Editorial - subtle icons
-    return ICONS.checkCircle
+// Theme color presets
+const THEME_COLORS = {
+  dark: {
+    bg: "#0B0B0E",
+    surf: "#15151A",
+    txt: "#EAEAF0",
+    mut: "#B9B9C6",
+    pri: "#BB2649",
+    border: "#2A2A33",
+  },
+  light: {
+    bg: "#FFFFFF",
+    surf: "#F5F5F7",
+    txt: "#1A1A1A",
+    mut: "#666666",
+    pri: "#BB2649",
+    border: "#E0E0E0",
+  },
+}
+
+function getIconForSlide(templateId: string, slideIndex: number): string {
+  if (templateId === "problem-solution") {
+    return slideIndex === 0 ? ICONS.alert : ICONS.checkCircle
+  } else if (templateId === "transformation") {
+    return ICONS.trendingUp
   } else {
-    // Minimal - very subtle
-    return ICONS.checkCircle
+    return slideIndex === 0 ? ICONS.sparkles : ICONS.lightbulb
   }
 }
 
-export function renderCarouselHTML(slides: Slide[], templateId: string, fontScale: number = 1.0): string {
+export function renderCarouselHTML(
+  slides: Slide[],
+  templateId: string,
+  fontScale: number = 1.0,
+  theme: ThemeMode = "dark",
+): string {
+  const colors = THEME_COLORS[theme]
+
   const templateStyles = {
-    "template-a": `
-      /* Template A - Minimal Tech */
+    "problem-solution": `
+      /* Problem-Solution Template - Urgency & Action */
+      /* Diseñado para 1080x1080 - Tamaños fijos grandes */
       .slide {
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        border: 3px solid ${colors.border};
+        border-left: 12px solid ${colors.pri};
+        box-shadow: -6px 0 24px rgba(187, 38, 73, 0.15), 0 6px 30px rgba(0, 0, 0, ${theme === "dark" ? "0.3" : "0.1"});
+        background: ${colors.surf};
+        overflow: visible;
       }
       .slide-number {
-        background: linear-gradient(135deg, #BB2649, #D63E6E);
-      }
-      .slide-icon {
-        opacity: 0.4;
-        width: 28px;
-        height: 28px;
-        color: var(--pri);
-      }
-    `,
-    "template-b": `
-      /* Template B - Bold Magenta (Cuadrado Optimizado) */
-      .slide {
-        border: 1px solid var(--border);
-        border-left: 6px solid var(--pri);
-        box-shadow: 0 4px 16px rgba(187, 38, 73, 0.1), 0 0 0 1px rgba(187, 38, 73, 0.05);
-      }
-      .slide-number {
-        color: var(--pri);
-      }
-      .title {
-        color: var(--txt);
-        position: relative;
-        padding-bottom: 12px;
-      }
-      .title::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 60px;
-        height: 3px;
-        background: var(--pri);
-      }
-      .bullets div::before {
-        font-size: 20px;
-      }
-      .slide-icon {
-        width: 40px;
-        height: 40px;
-        color: var(--pri);
-        opacity: 0.8;
-      }
-    `,
-    "template-c": `
-      /* Template C - Editorial Grid (Cuadrado) */
-      .slide {
-        border-left: 6px solid var(--pri);
-        border-top: 1px solid var(--border);
-        border-right: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-        box-shadow: -2px 0 12px rgba(187, 38, 73, 0.1), 0 2px 12px rgba(0, 0, 0, 0.15);
-      }
-      .title {
-        font-family: 'Georgia', 'Times New Roman', serif;
-        font-style: italic;
-      }
-      .slide-icon {
-        width: 36px;
-        height: 36px;
-        color: var(--pri);
-        opacity: 0.7;
-      }
-    `,
-    "template-d": `
-      /* Template D - Data-Driven (Cuadrado) */
-      .slide {
-        border: 1px solid var(--border);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-        background: linear-gradient(135deg, var(--surf) 0%, rgba(187, 38, 73, 0.02) 100%);
-      }
-      .slide-header {
-        display: flex;
+        background: ${colors.pri};
+        color: white;
+        font-size: ${110 * fontScale}px;
+        font-weight: 900;
+        padding: 20px 32px;
+        border-radius: 16px;
+        box-shadow: 0 6px 16px rgba(187, 38, 73, 0.35);
+        line-height: 1;
+        display: inline-flex;
         align-items: center;
-        gap: 16px;
-        margin-bottom: 32px;
-      }
-      .slide-number {
-        background: var(--pri);
-        font-size: calc(56px * var(--font-scale));
-        font-weight: 700;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(187, 38, 73, 0.2);
-        color: white;
-        line-height: 0.85;
+        justify-content: center;
       }
       .slide-icon {
-        width: 48px;
-        height: 48px;
-        color: white;
-        background: var(--pri);
-        padding: 8px;
-        border-radius: 8px;
+        width: ${76 * fontScale}px;
+        height: ${76 * fontScale}px;
+        color: ${colors.pri};
+        opacity: 0.9;
       }
       .title {
-        font-size: calc(38px * var(--font-scale));
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.15;
-        margin-bottom: 32px;
+        font-size: ${68 * fontScale}px;
+        font-weight: 900;
+        color: ${colors.txt};
+        line-height: 1.1;
+        margin-bottom: 40px;
       }
       .bullets div {
-        font-size: calc(20px * var(--font-scale));
-        font-weight: 500;
-        color: var(--txt);
-        line-height: 1.7;
+        font-size: ${38 * fontScale}px;
+        font-weight: 600;
+        color: ${colors.txt};
+        line-height: 1.5;
+        padding-left: 58px;
+        position: relative;
       }
       .bullets div::before {
-        content: '▸';
-        color: var(--pri);
-        font-size: calc(22px * var(--font-scale));
+        content: '→';
+        color: ${colors.pri};
+        font-size: ${46 * fontScale}px;
         font-weight: 700;
+        position: absolute;
+        left: 0;
+        top: 4px;
       }
     `,
-    "template-e": `
-      /* Template E - Storytelling (Cuadrado) */
+    transformation: `
+      /* Transformation Template - Before/After Contrast */
+      /* Diseñado para 1080x1080 - Tamaños fijos grandes */
       .slide {
-        border: none;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        background: linear-gradient(180deg, var(--surf) 0%, rgba(11, 11, 14, 0.98) 100%);
+        border: 2px solid ${colors.border};
+        box-shadow: 0 12px 36px rgba(0, 0, 0, ${theme === "dark" ? "0.4" : "0.15"});
+        background: ${colors.surf};
         position: relative;
-        overflow: hidden;
+        overflow: visible;
       }
       .slide::before {
         content: '';
@@ -172,62 +119,141 @@ export function renderCarouselHTML(slides: Slide[], templateId: string, fontScal
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--pri), #FF1744, var(--pri));
+        height: 8px;
+        background: ${colors.pri};
+      }
+      .slide-header {
+        position: relative;
+        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.05)" : "rgba(187, 38, 73, 0.02)"};
+        padding: 28px;
+        margin: -48px -48px 40px -48px;
+        padding-top: 64px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
       }
       .slide-number {
-        background: transparent;
-        color: var(--pri);
-        font-size: calc(56px * var(--font-scale));
-        font-weight: 700;
-        opacity: 0.6;
-        line-height: 0.85;
+        color: ${colors.pri};
+        font-size: ${96 * fontScale}px;
+        font-weight: 800;
+        line-height: 1;
+        opacity: 0.85;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .slide-icon {
-        width: 52px;
-        height: 52px;
-        color: var(--pri);
+        width: ${82 * fontScale}px;
+        height: ${82 * fontScale}px;
+        color: ${colors.pri};
         opacity: 0.8;
-        margin-bottom: 12px;
       }
       .title {
-        font-size: calc(38px * var(--font-scale));
+        font-size: ${66 * fontScale}px;
         font-weight: 800;
+        color: ${colors.txt};
         line-height: 1.15;
-        color: var(--txt);
-        margin: 12px 0 32px 0;
+        margin-bottom: 36px;
       }
-      .bullets {
-        font-size: calc(20px * var(--font-scale));
-        line-height: 1.75;
-        color: var(--mut);
+      .bullets div {
+        font-size: ${36 * fontScale}px;
+        font-weight: 500;
+        color: ${colors.txt};
+        line-height: 1.6;
+        padding: 16px 0;
+        padding-left: 58px;
+        position: relative;
       }
       .bullets div::before {
-        content: '→';
-        color: var(--pri);
+        content: '✓';
+        color: ${colors.pri};
+        font-size: ${44 * fontScale}px;
         font-weight: 700;
-        font-size: calc(20px * var(--font-scale));
+        position: absolute;
+        left: 0;
+        top: 20px;
       }
-      .footer {
-        border-top: 1px solid rgba(187, 38, 73, 0.15);
+    `,
+    educational: `
+      /* Educational Template - Clean Magazine Style */
+      /* Diseñado para 1080x1080 - Tamaños fijos grandes */
+      .slide {
+        border: 2px solid ${colors.border};
+        box-shadow: 0 4px 24px rgba(0, 0, 0, ${theme === "dark" ? "0.2" : "0.08"});
+        background: ${colors.surf};
+        overflow: visible;
+      }
+      .slide-number {
+        color: ${colors.mut};
+        font-size: ${88 * fontScale}px;
+        font-weight: 300;
+        line-height: 1;
+        opacity: 0.5;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .slide-icon {
+        width: ${78 * fontScale}px;
+        height: ${78 * fontScale}px;
+        color: ${colors.pri};
+        opacity: 0.7;
+        margin-bottom: 20px;
+      }
+      .title {
+        font-size: ${64 * fontScale}px;
+        font-weight: 700;
+        color: ${colors.txt};
+        line-height: 1.2;
+        margin-bottom: 36px;
+        position: relative;
+        padding-bottom: 24px;
+      }
+      .title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100px;
+        height: 5px;
+        background: ${colors.pri};
+        border-radius: 3px;
+      }
+      .bullets div {
+        font-size: ${35 * fontScale}px;
+        font-weight: 400;
+        color: ${colors.txt};
+        line-height: 1.7;
+        padding-left: 58px;
+        position: relative;
+      }
+      .bullets div::before {
+        content: '•';
+        color: ${colors.pri};
+        font-size: ${46 * fontScale}px;
+        font-weight: 400;
+        opacity: 0.7;
+        position: absolute;
+        left: 0;
+        top: 4px;
       }
     `,
   }
 
   const selectedTemplateStyle =
-    templateStyles[templateId as keyof typeof templateStyles] || templateStyles["template-a"]
+    templateStyles[templateId as keyof typeof templateStyles] || templateStyles["problem-solution"]
 
   const baseStyles = `
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
       :root {
-        --bg: #0B0B0E;
-        --surf: #15151A;
-        --txt: #EAEAF0;
-        --mut: #B9B9C6;
-        --pri: #BB2649;
-        --border: #2A2A33;
+        --bg: ${colors.bg};
+        --surf: ${colors.surf};
+        --txt: ${colors.txt};
+        --mut: ${colors.mut};
+        --pri: ${colors.pri};
+        --border: ${colors.border};
         --font-scale: ${fontScale};
       }
       * {
@@ -240,13 +266,15 @@ export function renderCarouselHTML(slides: Slide[], templateId: string, fontScal
         height: 1080px;
       }
       body {
-        font-family: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         background: var(--bg);
         color: var(--txt);
         padding: 0;
         margin: 0;
         width: 1080px;
         height: 1080px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       .deck {
         display: flex;
@@ -269,57 +297,54 @@ export function renderCarouselHTML(slides: Slide[], templateId: string, fontScal
       }
       .slide-header {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 20px;
         flex-wrap: wrap;
-        margin-bottom: 36px;
+        margin-bottom: 32px;
       }
       .slide-number {
-        font-size: calc(64px * var(--font-scale));
-        font-weight: 800;
-        color: var(--pri);
-        letter-spacing: -0.02em;
-        line-height: 0.85;
         flex-shrink: 0;
       }
+      .slide-icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .slide-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
       .title {
-        font-size: calc(42px * var(--font-scale));
-        font-weight: 800;
         letter-spacing: -0.02em;
-        line-height: 1.15;
-        color: var(--txt);
-        margin: 0 0 36px 0;
       }
       .bullets {
-        line-height: 1.75;
-        color: var(--mut);
-        font-size: calc(22px * var(--font-scale));
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 28px;
       }
       .bullets div {
         margin: 0;
-        padding-left: 32px;
+        padding-left: 58px;
         position: relative;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
       .bullets div::before {
-        content: '•';
         position: absolute;
         left: 0;
-        color: var(--pri);
-        font-weight: bold;
-        font-size: calc(24px * var(--font-scale));
+        top: 4px;
       }
       .footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: auto;
-        padding-top: 24px;
-        border-top: 1px solid var(--border);
+        padding-top: 32px;
+        border-top: 2px solid var(--border);
         opacity: 0.8;
-        font-size: calc(14px * var(--font-scale));
+        font-size: 20px;
       }
       .logo {
         font-weight: 700;
@@ -328,12 +353,13 @@ export function renderCarouselHTML(slides: Slide[], templateId: string, fontScal
       .branding {
         font-weight: 400;
         color: var(--txt);
+        opacity: 0.7;
       }
       .branding .highlight {
         color: var(--pri);
         font-weight: 700;
       }
-      
+
       ${selectedTemplateStyle}
     </style>
   `
@@ -341,13 +367,12 @@ export function renderCarouselHTML(slides: Slide[], templateId: string, fontScal
   const slidesHTML = (slides || [])
     .map(
       (s, i) => `
-    <section class="slide slide-${templateId}-${i + 1}">
+    <section class="slide">
       <div>
         <div class="slide-header">
           <span class="slide-number">${String(i + 1).padStart(2, "0")}</span>
-          ${templateId === "template-d" || templateId === "template-e" ? `<div class="slide-icon">${getIconForSlide(templateId, i, slides.length)}</div>` : ""}
+          <div class="slide-icon">${getIconForSlide(templateId, i)}</div>
         </div>
-        ${templateId !== "template-d" && templateId !== "template-e" && (templateId === "template-b" || templateId === "template-c") ? `<div class="slide-icon" style="margin-bottom: 16px;">${getIconForSlide(templateId, i, slides.length)}</div>` : ""}
         <h2 class="title">${s.title || ""}</h2>
         <div class="bullets">
           ${(s.bullets || []).map((b) => `<div>${b}</div>`).join("")}
