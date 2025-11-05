@@ -8,8 +8,27 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, Key, Palette, Zap, Save, CheckCircle2, ExternalLink, Download } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Settings,
+  Key,
+  Palette,
+  Zap,
+  Save,
+  CheckCircle2,
+  ExternalLink,
+  Download,
+  Image as ImageIcon,
+  Upload,
+  Trash2,
+} from "lucide-react"
+import { NARRATIVE_STYLES } from "@/lib/v2/templates/narrative-definitions"
 
 // Default theme colors matching template-renderer.tsx
 const DEFAULT_DARK_COLORS = {
@@ -38,6 +57,7 @@ export default function SettingsPage() {
   const [exportEngine, setExportEngine] = useState("html2canvas")
   const [darkColors, setDarkColors] = useState(DEFAULT_DARK_COLORS)
   const [lightColors, setLightColors] = useState(DEFAULT_LIGHT_COLORS)
+  const [customTemplates, setCustomTemplates] = useState<Record<string, { dark?: string; light?: string }>>({})
   const [saved, setSaved] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -75,6 +95,16 @@ export default function SettingsPage() {
         console.error("Error parsing light colors:", e)
       }
     }
+
+    // Load custom templates
+    const savedTemplates = localStorage.getItem("customTemplates")
+    if (savedTemplates) {
+      try {
+        setCustomTemplates(JSON.parse(savedTemplates))
+      } catch (e) {
+        console.error("Error parsing custom templates:", e)
+      }
+    }
   }, [])
 
   const handleSave = () => {
@@ -85,9 +115,44 @@ export default function SettingsPage() {
     localStorage.setItem("exportEngine", exportEngine)
     localStorage.setItem("darkColors", JSON.stringify(darkColors))
     localStorage.setItem("lightColors", JSON.stringify(lightColors))
+    localStorage.setItem("customTemplates", JSON.stringify(customTemplates))
 
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  const handleTemplateUpload = async (narrativeId: string, theme: "dark" | "light", file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file")
+      return
+    }
+
+    // Convert to base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string
+      setCustomTemplates((prev) => ({
+        ...prev,
+        [narrativeId]: {
+          ...prev[narrativeId],
+          [theme]: base64,
+        },
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleDeleteTemplate = (narrativeId: string, theme: "dark" | "light") => {
+    setCustomTemplates((prev) => {
+      const updated = { ...prev }
+      if (updated[narrativeId]) {
+        delete updated[narrativeId][theme]
+        if (!updated[narrativeId].dark && !updated[narrativeId].light) {
+          delete updated[narrativeId]
+        }
+      }
+      return updated
+    })
   }
 
   return (
@@ -100,29 +165,38 @@ export default function SettingsPage() {
             <Settings className="h-8 w-8" />
             Configuración
           </h1>
-          <p className="mt-2 text-muted-foreground">Configura tu API key y personaliza la identidad de tu marca</p>
+          <p className="mt-2 text-muted-foreground">
+            Configura tu API key y personaliza la identidad de tu marca
+          </p>
         </div>
 
         <div className="mx-auto max-w-3xl">
           <Tabs defaultValue="api" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
               <TabsTrigger value="api" className="flex items-center gap-2">
                 <Key className="h-4 w-4" />
-                API Key
+                <span className="hidden sm:inline">API Key</span>
+                <span className="sm:hidden">API</span>
               </TabsTrigger>
               <TabsTrigger value="model" className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
-                Modelo IA
+                <span className="hidden sm:inline">Modelo IA</span>
+                <span className="sm:hidden">IA</span>
               </TabsTrigger>
-              <TabsTrigger value="export" className="flex items-center gap-2">
+              <TabsTrigger value="templates" className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Templates</span>
+                <span className="sm:hidden">Imgs</span>
+              </TabsTrigger>
+              <TabsTrigger value="export" className="flex items-center gap-2 hidden sm:flex">
                 <Download className="h-4 w-4" />
                 Exportar
               </TabsTrigger>
-              <TabsTrigger value="themes" className="flex items-center gap-2">
+              <TabsTrigger value="themes" className="flex items-center gap-2 hidden sm:flex">
                 <Palette className="h-4 w-4" />
                 Temas
               </TabsTrigger>
-              <TabsTrigger value="brand" className="flex items-center gap-2">
+              <TabsTrigger value="brand" className="flex items-center gap-2 hidden sm:flex">
                 <Palette className="h-4 w-4" />
                 Marca
               </TabsTrigger>
@@ -198,18 +272,24 @@ export default function SettingsPage() {
                         <SelectItem value="gemini-2.5-flash">
                           <div className="flex flex-col">
                             <span className="font-medium">Gemini 2.5 Flash</span>
-                            <span className="text-xs text-muted-foreground">(Recomendado) - Rápido y económico</span>
+                            <span className="text-xs text-muted-foreground">
+                              (Recomendado) - Rápido y económico
+                            </span>
                           </div>
                         </SelectItem>
                         <SelectItem value="gemini-2.5-pro">
                           <div className="flex flex-col">
                             <span className="font-medium">Gemini 2.5 Pro</span>
-                            <span className="text-xs text-muted-foreground">Más potente, 15x más caro</span>
+                            <span className="text-xs text-muted-foreground">
+                              Más potente, 15x más caro
+                            </span>
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Cambiar el modelo afectará las generaciones futuras</p>
+                    <p className="text-xs text-muted-foreground">
+                      Cambiar el modelo afectará las generaciones futuras
+                    </p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -238,7 +318,10 @@ export default function SettingsPage() {
                   <Alert className="border-primary/20 bg-primary/5">
                     <Zap className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-sm">
-                      <p className="font-medium text-foreground">Modelo Actual: {geminiModel === "gemini-2.5-flash" ? "Gemini 2.5 Flash" : "Gemini 2.5 Pro"}</p>
+                      <p className="font-medium text-foreground">
+                        Modelo Actual:{" "}
+                        {geminiModel === "gemini-2.5-flash" ? "Gemini 2.5 Flash" : "Gemini 2.5 Pro"}
+                      </p>
                       <p className="mt-1 text-muted-foreground">
                         {geminiModel === "gemini-2.5-flash"
                           ? "Usando Flash: Excelente para carruseles, rápido y económico."
@@ -269,18 +352,24 @@ export default function SettingsPage() {
                         <SelectItem value="html2canvas">
                           <div className="flex flex-col">
                             <span className="font-medium">html2canvas (PNG)</span>
-                            <span className="text-xs text-muted-foreground">(Recomendado) - Alta calidad, texto sharp</span>
+                            <span className="text-xs text-muted-foreground">
+                              (Recomendado) - Alta calidad, texto sharp
+                            </span>
                           </div>
                         </SelectItem>
                         <SelectItem value="html-to-image">
                           <div className="flex flex-col">
                             <span className="font-medium">html-to-image</span>
-                            <span className="text-xs text-muted-foreground">Mayor control, múltiples formatos</span>
+                            <span className="text-xs text-muted-foreground">
+                              Mayor control, múltiples formatos
+                            </span>
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Cambiar el motor afectará las futuras descargas</p>
+                    <p className="text-xs text-muted-foreground">
+                      Cambiar el motor afectará las futuras descargas
+                    </p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -309,7 +398,10 @@ export default function SettingsPage() {
                   <Alert className="border-primary/20 bg-primary/5">
                     <Download className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-sm">
-                      <p className="font-medium text-foreground">Motor Actual: {exportEngine === "html2canvas" ? "html2canvas (PNG)" : "html-to-image"}</p>
+                      <p className="font-medium text-foreground">
+                        Motor Actual:{" "}
+                        {exportEngine === "html2canvas" ? "html2canvas (PNG)" : "html-to-image"}
+                      </p>
                       <p className="mt-1 text-muted-foreground">
                         {exportEngine === "html2canvas"
                           ? "Exportando con html2canvas en formato PNG (escala 4-5x retina, auto-DPI, máxima calidad de texto)."
@@ -568,13 +660,17 @@ export default function SettingsPage() {
                           id="light-border"
                           type="color"
                           value={lightColors.border}
-                          onChange={(e) => setLightColors({ ...lightColors, border: e.target.value })}
+                          onChange={(e) =>
+                            setLightColors({ ...lightColors, border: e.target.value })
+                          }
                           className="h-10 w-16 cursor-pointer bg-secondary p-1"
                         />
                         <Input
                           type="text"
                           value={lightColors.border}
-                          onChange={(e) => setLightColors({ ...lightColors, border: e.target.value })}
+                          onChange={(e) =>
+                            setLightColors({ ...lightColors, border: e.target.value })
+                          }
                           className="flex-1 bg-secondary font-mono text-sm"
                         />
                       </div>
@@ -589,6 +685,109 @@ export default function SettingsPage() {
                   >
                     Restaurar Valores por Defecto
                   </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="templates" className="space-y-6">
+              <Card className="border-border bg-card">
+                <CardHeader>
+                  <CardTitle>Template Images</CardTitle>
+                  <CardDescription>
+                    Upload custom template images for each narrative framework (1080x1080px PNG recommended)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {NARRATIVE_STYLES.map((style) => (
+                    <div key={style.id} className="glass rounded-xl p-5 border-2 border-border/50">
+                      <h4 className="font-bold text-base mb-1">{style.name}</h4>
+                      <p className="text-sm text-muted-foreground mb-4">{style.subtitle}</p>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {/* Dark theme upload */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-semibold">Dark Theme</Label>
+                          {customTemplates[style.id]?.dark ? (
+                            <div className="relative group">
+                              <img
+                                src={customTemplates[style.id].dark}
+                                alt={`${style.name} Dark`}
+                                className="w-full aspect-square object-cover rounded-lg border-2 border-border"
+                              />
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDeleteTemplate(style.id, "dark")}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-smooth">
+                              <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">Click to upload</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) handleTemplateUpload(style.id, "dark", file)
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+
+                        {/* Light theme upload */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-semibold">Light Theme</Label>
+                          {customTemplates[style.id]?.light ? (
+                            <div className="relative group">
+                              <img
+                                src={customTemplates[style.id].light}
+                                alt={`${style.name} Light`}
+                                className="w-full aspect-square object-cover rounded-lg border-2 border-border"
+                              />
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDeleteTemplate(style.id, "light")}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-smooth">
+                              <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">Click to upload</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) handleTemplateUpload(style.id, "light", file)
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <ImageIcon className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-sm">
+                      <p className="font-medium text-foreground mb-1">Custom Templates</p>
+                      <p className="text-muted-foreground">
+                        Upload 1080x1080px PNG images. Custom templates override default templates when generating carousels.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -611,7 +810,9 @@ export default function SettingsPage() {
                       onChange={(e) => setBrandName(e.target.value)}
                       className="bg-secondary"
                     />
-                    <p className="text-xs text-muted-foreground">Este nombre aparecerá en los carruseles generados</p>
+                    <p className="text-xs text-muted-foreground">
+                      Este nombre aparecerá en los carruseles generados
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -640,9 +841,14 @@ export default function SettingsPage() {
                   <div className="rounded-lg border border-border bg-secondary p-4">
                     <p className="mb-3 text-sm font-medium text-foreground">Vista Previa</p>
                     <div className="flex items-center gap-3">
-                      <div className="h-16 w-16 rounded-lg" style={{ backgroundColor: brandColor }} />
+                      <div
+                        className="h-16 w-16 rounded-lg"
+                        style={{ backgroundColor: brandColor }}
+                      />
                       <div>
-                        <p className="text-lg font-bold text-foreground">{brandName || "Tu Marca"}</p>
+                        <p className="text-lg font-bold text-foreground">
+                          {brandName || "Tu Marca"}
+                        </p>
                         <p className="text-sm text-muted-foreground">Color: {brandColor}</p>
                       </div>
                     </div>
@@ -655,12 +861,18 @@ export default function SettingsPage() {
           {saved && (
             <Alert className="border-success/20 bg-success/10">
               <CheckCircle2 className="h-4 w-4 text-success" />
-              <AlertDescription className="text-success">Configuración guardada exitosamente</AlertDescription>
+              <AlertDescription className="text-success">
+                Configuración guardada exitosamente
+              </AlertDescription>
             </Alert>
           )}
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              onClick={handleSave}
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Save className="mr-2 h-4 w-4" />
               Guardar Configuración
             </Button>

@@ -1,0 +1,2 @@
+# Temporarily disabled - will configure ESLint properly in next phase
+# npx lint-staged
