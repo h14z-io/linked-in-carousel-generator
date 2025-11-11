@@ -189,9 +189,7 @@ export function renderCarouselHTML(
       }
     `,
     educational: `
-      /* EDITORIAL PREMIUM - Magazine, serif typography, sofisticado */
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
-
+      /* EDITORIAL CLEAN - Modern, clean typography, profesional */
       .slide {
         border: 1px solid ${colors.pri};
         box-shadow: 0 2px 8px rgba(0, 0, 0, ${theme === "dark" ? "0.25" : "0.1"});
@@ -202,14 +200,14 @@ export function renderCarouselHTML(
       .slide-header {
         margin-bottom: 48px;
         text-align: center;
-        border-bottom: 1px solid ${colors.pri};
+        border-bottom: 2px solid ${colors.pri};
         padding-bottom: 24px;
       }
       .slide-number {
-        font-family: 'Playfair Display', serif;
+        font-family: 'Inter', sans-serif;
         color: ${colors.pri};
         font-size: ${64 * fontScale}px;
-        font-weight: 700;
+        font-weight: 800;
         line-height: 1;
         display: block;
         margin-bottom: 12px;
@@ -229,13 +227,13 @@ export function renderCarouselHTML(
         display: none;
       }
       .title {
-        font-family: 'Playfair Display', serif;
+        font-family: 'Inter', sans-serif;
         font-size: ${52 * fontScale}px;
         font-weight: 700;
         color: ${colors.txt};
-        line-height: 1.3;
+        line-height: 1.25;
         margin-bottom: 40px;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.02em;
         position: relative;
         padding-bottom: 20px;
       }

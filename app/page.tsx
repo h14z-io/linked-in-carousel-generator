@@ -1320,7 +1320,7 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
                       </div>
                     </div>
                     <div className="flex justify-center">
-                      <div className="rounded-lg border-2 border-border bg-background shadow-xl overflow-hidden" style={{ aspectRatio: "1/1", maxWidth: "550px", width: "100%", position: "relative" }}>
+                      <div className="border-2 border-border bg-background shadow-xl overflow-hidden" style={{ aspectRatio: "1/1", maxWidth: "550px", width: "100%", position: "relative" }}>
                         <iframe
                           srcDoc={generation.htmlPreview}
                           style={{
