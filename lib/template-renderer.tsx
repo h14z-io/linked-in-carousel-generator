@@ -45,197 +45,231 @@ export function renderCarouselHTML(
   templateId: string,
   fontScale: number = 1.0,
   theme: ThemeMode = "dark",
+  brandColor?: string,
+  brandName?: string,
 ): string {
-  const colors = THEME_COLORS[theme]
+  const colors = { ...THEME_COLORS[theme] }
+
+  // FASE 1: Sobrescribir color primario con brandColor de settings
+  if (brandColor) {
+    colors.pri = brandColor
+  }
+
+  // Usar brandName para footer (por defecto h14z.io)
+  const finalBrandName = brandName || "h14z.io"
 
   const templateStyles = {
     "problem-solution": `
-      /* Problem-Solution Template - Urgency & Action */
-      /* Diseñado para 1080x1080 - Tamaños fijos grandes */
+      /* MINIMAL TECH - Brutalist, espacios amplios, tipografía protagonista */
       .slide {
-        border: 3px solid ${colors.border};
-        border-left: 12px solid ${colors.pri};
-        box-shadow: -6px 0 24px rgba(187, 38, 73, 0.15), 0 6px 30px rgba(0, 0, 0, ${theme === "dark" ? "0.3" : "0.1"});
+        border-left: 2px solid ${colors.pri};
+        box-shadow: none;
         background: ${colors.surf};
         overflow: visible;
+        padding: 60px 80px;
+      }
+      .slide-header {
+        margin-bottom: 60px;
       }
       .slide-number {
-        background: ${colors.pri};
-        color: white;
-        font-size: ${110 * fontScale}px;
-        font-weight: 900;
-        padding: 20px 32px;
-        border-radius: 16px;
-        box-shadow: 0 6px 16px rgba(187, 38, 73, 0.35);
+        color: ${colors.mut};
+        font-size: ${48 * fontScale}px;
+        font-weight: 300;
         line-height: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        display: block;
+        opacity: 0.5;
       }
       .slide-icon {
-        width: ${76 * fontScale}px;
-        height: ${76 * fontScale}px;
-        color: ${colors.pri};
-        opacity: 0.9;
+        display: none;
       }
       .title {
-        font-size: ${68 * fontScale}px;
+        font-size: ${72 * fontScale}px;
         font-weight: 900;
         color: ${colors.txt};
-        line-height: 1.1;
-        margin-bottom: 40px;
+        line-height: 1.05;
+        margin-bottom: 60px;
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+      }
+      .bullets {
+        gap: 50px;
       }
       .bullets div {
-        font-size: ${38 * fontScale}px;
-        font-weight: 600;
+        font-size: ${28 * fontScale}px;
+        font-weight: 500;
         color: ${colors.txt};
-        line-height: 1.5;
-        padding-left: 58px;
+        line-height: 1.6;
+        padding-left: 40px;
         position: relative;
+        margin-bottom: 0;
       }
       .bullets div::before {
         content: '→';
         color: ${colors.pri};
-        font-size: ${46 * fontScale}px;
+        font-size: ${32 * fontScale}px;
         font-weight: 700;
         position: absolute;
         left: 0;
-        top: 4px;
+        top: 0px;
       }
     `,
     transformation: `
-      /* Transformation Template - Before/After Contrast */
-      /* Diseñado para 1080x1080 - Tamaños fijos grandes */
+      /* DATA DRIVEN - Dashboard style, números grandes, barra de progreso */
       .slide {
-        border: 2px solid ${colors.border};
-        box-shadow: 0 12px 36px rgba(0, 0, 0, ${theme === "dark" ? "0.4" : "0.15"});
+        border: 4px double ${colors.pri};
+        box-shadow: 0 8px 24px rgba(0, 0, 0, ${theme === "dark" ? "0.4" : "0.15"});
         background: ${colors.surf};
         position: relative;
         overflow: visible;
+        padding: 56px;
       }
-      .slide::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 8px;
-        background: ${colors.pri};
-      }
-      .slide-header {
-        position: relative;
-        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.05)" : "rgba(187, 38, 73, 0.02)"};
-        padding: 28px;
-        margin: -48px -48px 40px -48px;
-        padding-top: 64px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-      }
-      .slide-number {
-        color: ${colors.pri};
-        font-size: ${96 * fontScale}px;
-        font-weight: 800;
-        line-height: 1;
-        opacity: 0.85;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .slide-icon {
-        width: ${82 * fontScale}px;
-        height: ${82 * fontScale}px;
-        color: ${colors.pri};
-        opacity: 0.8;
-      }
-      .title {
-        font-size: ${66 * fontScale}px;
-        font-weight: 800;
-        color: ${colors.txt};
-        line-height: 1.15;
-        margin-bottom: 36px;
-      }
-      .bullets div {
-        font-size: ${36 * fontScale}px;
-        font-weight: 500;
-        color: ${colors.txt};
-        line-height: 1.6;
-        padding: 16px 0;
-        padding-left: 58px;
-        position: relative;
-      }
-      .bullets div::before {
-        content: '✓';
-        color: ${colors.pri};
-        font-size: ${44 * fontScale}px;
-        font-weight: 700;
-        position: absolute;
-        left: 0;
-        top: 20px;
-      }
-    `,
-    educational: `
-      /* Educational Template - Clean Magazine Style */
-      /* Diseñado para 1080x1080 - Tamaños fijos grandes */
-      .slide {
-        border: 2px solid ${colors.border};
-        box-shadow: 0 4px 24px rgba(0, 0, 0, ${theme === "dark" ? "0.2" : "0.08"});
-        background: ${colors.surf};
-        overflow: visible;
-      }
-      .slide-number {
-        color: ${colors.mut};
-        font-size: ${88 * fontScale}px;
-        font-weight: 300;
-        line-height: 1;
-        opacity: 0.5;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .slide-icon {
-        width: ${78 * fontScale}px;
-        height: ${78 * fontScale}px;
-        color: ${colors.pri};
-        opacity: 0.7;
-        margin-bottom: 20px;
-      }
-      .title {
-        font-size: ${64 * fontScale}px;
-        font-weight: 700;
-        color: ${colors.txt};
-        line-height: 1.2;
-        margin-bottom: 36px;
-        position: relative;
-        padding-bottom: 24px;
-      }
-      .title::after {
+      .slide::after {
         content: '';
         position: absolute;
         bottom: 0;
         left: 0;
-        width: 100px;
-        height: 5px;
+        right: 0;
+        height: 8px;
         background: ${colors.pri};
-        border-radius: 3px;
+        opacity: 0.8;
+      }
+      .slide-header {
+        position: relative;
+        border: 2px solid ${colors.pri};
+        padding: 20px 32px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.08)" : "rgba(187, 38, 73, 0.03)"};
+      }
+      .slide-number {
+        color: ${colors.pri};
+        font-size: ${56 * fontScale}px;
+        font-weight: 900;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .slide-icon {
+        width: ${48 * fontScale}px;
+        height: ${48 * fontScale}px;
+        color: ${colors.pri};
+        opacity: 1;
+      }
+      .title {
+        font-size: ${54 * fontScale}px;
+        font-weight: 800;
+        color: ${colors.txt};
+        line-height: 1.15;
+        margin-bottom: 36px;
+        letter-spacing: -0.02em;
+      }
+      .bullets {
+        gap: 32px;
       }
       .bullets div {
-        font-size: ${35 * fontScale}px;
+        font-size: ${32 * fontScale}px;
+        font-weight: 600;
+        color: ${colors.txt};
+        line-height: 1.5;
+        padding-left: 48px;
+        position: relative;
+        margin-bottom: 0;
+      }
+      .bullets div::before {
+        content: '✓';
+        color: ${colors.pri};
+        font-size: ${40 * fontScale}px;
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        top: -2px;
+      }
+    `,
+    educational: `
+      /* EDITORIAL PREMIUM - Magazine, serif typography, sofisticado */
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+
+      .slide {
+        border: 1px solid ${colors.pri};
+        box-shadow: 0 2px 8px rgba(0, 0, 0, ${theme === "dark" ? "0.25" : "0.1"});
+        background: ${colors.surf};
+        overflow: visible;
+        padding: 64px 56px;
+      }
+      .slide-header {
+        margin-bottom: 48px;
+        text-align: center;
+        border-bottom: 1px solid ${colors.pri};
+        padding-bottom: 24px;
+      }
+      .slide-number {
+        font-family: 'Playfair Display', serif;
+        color: ${colors.pri};
+        font-size: ${64 * fontScale}px;
+        font-weight: 700;
+        line-height: 1;
+        display: block;
+        margin-bottom: 12px;
+        position: relative;
+      }
+      .slide-number::before,
+      .slide-number::after {
+        content: '────';
+        font-family: 'Inter', sans-serif;
+        display: block;
+        font-size: ${20 * fontScale}px;
+        color: ${colors.pri};
+        opacity: 0.5;
+        letter-spacing: 0.2em;
+      }
+      .slide-icon {
+        display: none;
+      }
+      .title {
+        font-family: 'Playfair Display', serif;
+        font-size: ${52 * fontScale}px;
+        font-weight: 700;
+        color: ${colors.txt};
+        line-height: 1.3;
+        margin-bottom: 40px;
+        letter-spacing: -0.01em;
+        position: relative;
+        padding-bottom: 20px;
+      }
+      .title::after {
+        content: '══════';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        font-size: ${16 * fontScale}px;
+        color: ${colors.pri};
+        letter-spacing: 0.1em;
+        opacity: 0.6;
+      }
+      .bullets {
+        gap: 28px;
+      }
+      .bullets div {
+        font-size: ${26 * fontScale}px;
         font-weight: 400;
         color: ${colors.txt};
         line-height: 1.7;
-        padding-left: 58px;
+        padding-left: 40px;
         position: relative;
+        margin-bottom: 0;
+        text-align: left;
       }
       .bullets div::before {
         content: '•';
         color: ${colors.pri};
-        font-size: ${46 * fontScale}px;
+        font-size: ${40 * fontScale}px;
         font-weight: 400;
-        opacity: 0.7;
         position: absolute;
         left: 0;
-        top: 4px;
+        top: -4px;
       }
     `,
   }
@@ -379,7 +413,7 @@ export function renderCarouselHTML(
         </div>
       </div>
       <div class="footer">
-        <span class="logo">h14z.io</span>
+        <span class="logo">${finalBrandName}</span>
         <span class="branding"><span class="highlight">H</span>idalgo <span class="highlight">H</span>ernández | <span class="highlight">S</span>trategic <span class="highlight">A</span>dvisory</span>
       </div>
     </section>

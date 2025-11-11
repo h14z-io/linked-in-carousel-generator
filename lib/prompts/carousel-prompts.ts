@@ -1,122 +1,122 @@
 import type { GenerationInput } from "../types"
 
-// Audience pain points and language mappings
+// Audience pain points and language mappings - ultra-specific
 const AUDIENCE_PROFILES = {
   tech: {
     painPoints: {
-      es: "deuda técnica, pipelines lentos, escalabilidad, bugs en producción",
-      en: "technical debt, slow pipelines, scalability issues, production bugs",
+      es: "deuda técnica acumulada (6+ meses de refactoring), pipelines que tardan 45+ min, arquitectura monolítica que no escala, bugs críticos en producción cada semana, onboarding de devs que toma 2+ semanas",
+      en: "accumulated technical debt (6+ months of refactoring), pipelines taking 45+ min, monolithic architecture that doesn't scale, critical production bugs weekly, dev onboarding taking 2+ weeks",
     },
     benefits: {
-      es: "velocidad de deployment, arquitectura escalable, reducción de incidentes",
-      en: "deployment velocity, scalable architecture, incident reduction",
+      es: "deployment 10x más rápido (de 1h a 6min), arquitectura que escala a 100k usuarios sin cambios, 90% menos incidentes de producción, tiempo de desarrollo reducido 40%",
+      en: "10x faster deployment (from 1h to 6min), architecture scaling to 100k users without changes, 90% fewer production incidents, 40% reduced development time",
     },
     vocabulary: {
-      es: "DevOps, CI/CD, microservicios, containers, Kubernetes",
-      en: "DevOps, CI/CD, microservices, containers, Kubernetes",
+      es: "DevOps, CI/CD, microservicios, containers, Kubernetes, Infrastructure as Code, observabilidad, latency p99, throughput",
+      en: "DevOps, CI/CD, microservices, containers, Kubernetes, Infrastructure as Code, observability, latency p99, throughput",
     },
   },
   finance: {
     painPoints: {
-      es: "costos operativos elevados, falta de visibilidad ROI, compliance complejo",
-      en: "high operational costs, lack of ROI visibility, complex compliance",
+      es: "costos operativos que suben 15% anual, falta total de visibilidad ROI por proyecto, compliance manual que consume 200+ horas/mes, presupuestos IT que se desvían 30%+",
+      en: "operational costs rising 15% yearly, zero ROI visibility per project, manual compliance consuming 200+ hours/month, IT budgets deviating 30%+",
     },
     benefits: {
-      es: "reducción de costos, ROI medible, cumplimiento automatizado",
-      en: "cost reduction, measurable ROI, automated compliance",
+      es: "reducción de OPEX del 25-40%, ROI medible en tiempo real por iniciativa, compliance automatizado (de 200h a 20h/mes), presupuestos con desviación <5%",
+      en: "25-40% OPEX reduction, real-time measurable ROI per initiative, automated compliance (from 200h to 20h/month), budgets with <5% deviation",
     },
     vocabulary: {
-      es: "TCO, ROI, OPEX vs CAPEX, análisis financiero",
-      en: "TCO, ROI, OPEX vs CAPEX, financial analysis",
+      es: "TCO, ROI, NPV, IRR, OPEX vs CAPEX, análisis costo-beneficio, depreciación, amortización, payback period",
+      en: "TCO, ROI, NPV, IRR, OPEX vs CAPEX, cost-benefit analysis, depreciation, amortization, payback period",
     },
   },
   exec: {
     painPoints: {
-      es: "transformación digital lenta, falta de agilidad, competencia disruptiva",
-      en: "slow digital transformation, lack of agility, disruptive competition",
+      es: "transformación digital estancada (3+ años sin progreso real), ciclos de decisión de 6+ meses, competidores disruptivos ganando 20%+ market share, silos organizacionales bloqueando innovación",
+      en: "stalled digital transformation (3+ years without real progress), 6+ month decision cycles, disruptive competitors gaining 20%+ market share, organizational silos blocking innovation",
     },
     benefits: {
-      es: "ventaja competitiva, agilidad organizacional, innovación acelerada",
-      en: "competitive advantage, organizational agility, accelerated innovation",
+      es: "time-to-market reducido 60%, decisiones basadas en datos en tiempo real, ventaja competitiva sostenible (moat defendible), cultura de innovación continua",
+      en: "60% reduced time-to-market, real-time data-driven decisions, sustainable competitive advantage (defensible moat), continuous innovation culture",
     },
     vocabulary: {
-      es: "transformación digital, estrategia, innovación, liderazgo",
-      en: "digital transformation, strategy, innovation, leadership",
+      es: "transformación digital, roadmap estratégico, competitive moat, disrupción, agilidad organizacional, OKRs, North Star metrics",
+      en: "digital transformation, strategic roadmap, competitive moat, disruption, organizational agility, OKRs, North Star metrics",
     },
   },
   managers: {
     painPoints: {
-      es: "baja productividad del equipo, procesos manuales, burnout",
-      en: "low team productivity, manual processes, burnout",
+      es: "productividad del equipo bajando 20% trimestral, 40%+ del tiempo en tareas manuales repetitivas, burnout del 30% del equipo, rotación alta (15%+ anual)",
+      en: "team productivity dropping 20% quarterly, 40%+ of time on repetitive manual tasks, 30% team burnout rate, high turnover (15%+ yearly)",
     },
     benefits: {
-      es: "equipo más productivo, automatización de tareas, mejor moral",
-      en: "more productive team, task automation, improved morale",
+      es: "productividad aumentada 35%, 60% de tareas repetitivas automatizadas, engagement del equipo subiendo de 60% a 85%, retención mejorada (rotación <5%)",
+      en: "35% increased productivity, 60% of repetitive tasks automated, team engagement rising from 60% to 85%, improved retention (turnover <5%)",
     },
     vocabulary: {
-      es: "gestión de equipos, procesos, productividad, colaboración",
-      en: "team management, processes, productivity, collaboration",
+      es: "gestión ágil, OKRs de equipo, proceso de onboarding, automatización de workflows, colaboración asíncrona, 1-on-1s efectivos",
+      en: "agile management, team OKRs, onboarding process, workflow automation, async collaboration, effective 1-on-1s",
     },
   },
 }
 
-// Tone mappings
+// Tone mappings - dramatic differences
 const TONE_STYLES = {
   formal: {
-    es: "Usa lenguaje formal y profesional. Estructura con claridad. Evita contracciones.",
-    en: "Use formal, professional language. Structure clearly. Avoid contractions.",
+    es: "FORMAL: Lenguaje corporativo ejecutivo. Tercera persona. Verbos en infinitivo. Estructura: Problema → Análisis → Solución → Conclusión. Ejemplo: 'Las organizaciones enfrentan...', 'Se recomienda implementar...'. Cero emociones. Cero contracciones. Máxima autoridad.",
+    en: "FORMAL: Corporate executive language. Third person. Infinitive verbs. Structure: Problem → Analysis → Solution → Conclusion. Example: 'Organizations face...', 'It is recommended to implement...'. Zero emotions. Zero contractions. Maximum authority.",
   },
   conversational: {
-    es: "Usa tono conversacional y cercano. Haz preguntas retóricas. Usa contracciones cuando sea natural.",
-    en: "Use conversational, approachable tone. Ask rhetorical questions. Use contractions naturally.",
+    es: "CONVERSACIONAL: Habla como a un amigo en un café. Primera y segunda persona. Preguntas retóricas obligatorias ('¿Te suena familiar?', '¿Sabes qué descubrí?'). Contracciones naturales. Emojis opcionales. Tono: cálido, cercano, humano. Ejemplo: 'Mira, te cuento algo...'",
+    en: "CONVERSATIONAL: Talk like to a friend at a coffee shop. First and second person. Rhetorical questions required ('Sound familiar?', 'Know what I discovered?'). Natural contractions. Optional emojis. Tone: warm, close, human. Example: 'Look, let me tell you something...'",
   },
   inspirational: {
-    es: "Usa lenguaje aspiracional e inspirador. Pinta la visión del futuro. Motiva la acción.",
-    en: "Use aspirational, inspiring language. Paint vision of the future. Motivate action.",
+    es: "INSPIRACIONAL: Lenguaje visionario y motivador. Verbos de acción poderosos (transforma, revoluciona, impulsa). Pinta el futuro ideal. Usa metáforas épicas ('imagina un mundo donde...', 'el futuro no se predice, se construye'). Emoción alta. Call to greatness. Ejemplo: 'No se trata solo de X, se trata de transformar...'",
+    en: "INSPIRATIONAL: Visionary, motivating language. Powerful action verbs (transform, revolutionize, propel). Paint the ideal future. Use epic metaphors ('imagine a world where...', 'the future isn't predicted, it's built'). High emotion. Call to greatness. Example: 'It's not just about X, it's about transforming...'",
   },
   educational: {
-    es: "Enfoque didáctico. Explica paso a paso. Usa 'Aquí te muestro cómo...'",
-    en: "Educational focus. Explain step-by-step. Use 'Let me show you how...'",
+    es: "EDUCACIONAL: Profesor experto explicando paso a paso. Usa 'Aquí te muestro cómo...', 'Paso 1:', 'Lo que esto significa es...'. Incluye micro-ejemplos en cada punto. Anticipa preguntas ('Tal vez te preguntes...'). Tono: paciente, detallado, clarificador. Evita asumir conocimiento previo.",
+    en: "EDUCATIONAL: Expert teacher explaining step-by-step. Use 'Here's how...', 'Step 1:', 'What this means is...'. Include micro-examples in each point. Anticipate questions ('You might be wondering...'). Tone: patient, detailed, clarifying. Avoid assuming prior knowledge.",
   },
 }
 
-// Technical depth levels
+// Technical depth levels - audience-aware
 const DEPTH_LEVELS = {
   basic: {
-    es: "Usa analogías simples y términos generales. Evita jerga técnica.",
-    en: "Use simple analogies and general terms. Avoid technical jargon.",
+    es: "BÁSICO: Usa analogías cotidianas (ej: 'como un semáforo'). Cero jerga técnica. Explica como si fuera para tu abuela. Lenguaje extremadamente simple.",
+    en: "BASIC: Use everyday analogies (e.g., 'like a traffic light'). Zero technical jargon. Explain like it's for your grandma. Extremely simple language.",
   },
   intermediate: {
-    es: "Usa algunos términos técnicos pero explícalos brevemente.",
-    en: "Use some technical terms but explain them briefly.",
+    es: "INTERMEDIO: Usa términos técnicos comunes (API, servidor, base de datos) pero define cada uno en la misma frase. Ejemplo: 'El API (punto de conexión) permite...'",
+    en: "INTERMEDIATE: Use common technical terms (API, server, database) but define each in the same sentence. Example: 'The API (connection point) allows...'",
   },
   advanced: {
-    es: "Usa jerga de industria, arquitecturas específicas y métricas detalladas.",
-    en: "Use industry jargon, specific architectures, and detailed metrics.",
+    es: "AVANZADO: Jerga específica de industria obligatoria. Tech: Kubernetes, microservicios, event-driven architecture, latency p99. Finance: TCO, NPV, IRR. Exec: Digital transformation roadmap, competitive moat. Sin explicaciones básicas.",
+    en: "ADVANCED: Industry-specific jargon required. Tech: Kubernetes, microservices, event-driven architecture, latency p99. Finance: TCO, NPV, IRR. Exec: Digital transformation roadmap, competitive moat. No basic explanations.",
   },
 }
 
-// Objective CTA mappings
+// Objective CTA mappings - ultra-specific and action-oriented
 const OBJECTIVE_CTAS = {
   leads: {
-    es: ["Agenda una llamada ahora", "Descarga el whitepaper", "Solicita una demo"],
-    en: ["Schedule a call now", "Download the whitepaper", "Request a demo"],
+    es: ["📅 Agenda tu consultoría gratuita de 30 min", "📥 Descarga el whitepaper con 15 estrategias probadas", "🎯 Solicita demo personalizada (sin compromiso)", "💬 Reserva tu sesión estratégica gratuita"],
+    en: ["📅 Book your free 30-min consultation", "📥 Download whitepaper with 15 proven strategies", "🎯 Request personalized demo (no commitment)", "💬 Reserve your free strategic session"],
   },
   educate: {
-    es: ["Aprende más en nuestro blog", "Guarda esto para después", "Comparte con tu equipo"],
-    en: ["Learn more on our blog", "Save this for later", "Share with your team"],
+    es: ["📚 Lee el artículo completo con 12 ejemplos reales", "💾 Guarda esto - lo necesitarás después", "👥 Comparte con tu equipo de liderazgo", "🔖 Descarga la guía PDF completa (gratis)"],
+    en: ["📚 Read full article with 12 real examples", "💾 Save this - you'll need it later", "👥 Share with your leadership team", "🔖 Download complete PDF guide (free)"],
   },
   brand: {
-    es: ["Síguenos para más insights", "Únete a nuestra comunidad", "Conectemos"],
-    en: ["Follow us for more insights", "Join our community", "Let's connect"],
+    es: ["➕ Síguenos para 3 insights semanales como este", "🌟 Únete a nuestra comunidad de 10k+ profesionales", "🤝 Conectemos - hablemos sobre tu caso específico", "🔔 Activa notificaciones para no perderte contenido"],
+    en: ["➕ Follow us for 3 weekly insights like this", "🌟 Join our community of 10k+ professionals", "🤝 Let's connect - talk about your specific case", "🔔 Turn on notifications to not miss content"],
   },
   engagement: {
-    es: ["¿Qué opinas tú?", "Cuéntanos tu experiencia", "Comenta abajo"],
-    en: ["What do you think?", "Share your experience", "Comment below"],
+    es: ["💭 ¿Cuál de estos 3 puntos resuena más contigo?", "📣 Cuéntanos: ¿cómo lo resolviste en tu empresa?", "👇 Comenta abajo tu mayor desafío en esto", "🔁 Repostea si esto te pasó alguna vez"],
+    en: ["💭 Which of these 3 points resonates most with you?", "📣 Tell us: how did you solve this in your company?", "👇 Comment below your biggest challenge with this", "🔁 Repost if this happened to you"],
   },
   "thought-leadership": {
-    es: ["Descubre nuestro framework", "Lee el artículo completo", "Suscríbete al newsletter"],
-    en: ["Discover our framework", "Read the full article", "Subscribe to newsletter"],
+    es: ["🧠 Descubre nuestro framework exclusivo (usado por 500+ empresas)", "📖 Lee el deep-dive completo de 20 min", "📬 Suscríbete al newsletter semanal (12k+ suscriptores)", "🎓 Accede a nuestro curso gratuito sobre esto"],
+    en: ["🧠 Discover our exclusive framework (used by 500+ companies)", "📖 Read the full 20-min deep-dive", "📬 Subscribe to weekly newsletter (12k+ subscribers)", "🎓 Access our free course on this"],
   },
 }
 
@@ -149,10 +149,11 @@ Slide ${input.slideCount} (CTA): Call to action directo
 
 COPYWRITING PRINCIPLES:
 1. Hook: Específico + Numérico + Relevante (ej: "${audience.painPoints[lang]}")
-2. Bullets: Empieza con verbo de acción, máximo ${input.copyLength === "short" ? "60" : "90"} caracteres
-3. Benefits > Features: Enfócate en ${audience.benefits[lang]}
-4. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
-5. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, o similar
+2. Bullets: Empieza con verbo de acción, máximo ${input.copyLength === "short" ? "40" : "100"} caracteres
+3. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
+4. Benefits > Features: Enfócate en ${audience.benefits[lang]}
+5. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
+6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, o similar
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -167,7 +168,7 @@ FORMATO DE RESPUESTA (JSON estricto):
   "slides": [
     {
       "title": "Título del slide (máximo 60 caracteres)",
-      "bullets": ["Bullet 1 (máximo ${input.copyLength === "short" ? "60" : "90"} chars)", "Bullet 2", "..."],
+      "bullets": ["Bullet 1 (máximo ${input.copyLength === "short" ? "40" : "100"} chars)", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"],
       "visual_direction": "Descripción visual para este slide"
     }
   ],
@@ -197,10 +198,11 @@ Slide ${input.slideCount} (CTA): Direct call to action
 
 COPYWRITING PRINCIPLES:
 1. Hook: Specific + Numeric + Relevant (e.g., "${audience.painPoints[lang]}")
-2. Bullets: Start with action verb, max ${input.copyLength === "short" ? "60" : "90"} characters
-3. Benefits > Features: Focus on ${audience.benefits[lang]}
-4. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
-5. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, or similar
+2. Bullets: Start with action verb, max ${input.copyLength === "short" ? "40" : "100"} characters
+3. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
+4. Benefits > Features: Focus on ${audience.benefits[lang]}
+5. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
+6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, or similar
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -215,7 +217,7 @@ RESPONSE FORMAT (strict JSON):
   "slides": [
     {
       "title": "Slide title (max 60 characters)",
-      "bullets": ["Bullet 1 (max ${input.copyLength === "short" ? "60" : "90"} chars)", "Bullet 2", "..."],
+      "bullets": ["Bullet 1 (max ${input.copyLength === "short" ? "40" : "100"} chars)", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"],
       "visual_direction": "Visual description for this slide"
     }
   ],
@@ -263,6 +265,7 @@ COPYWRITING PRINCIPLES:
 3. After: Números concretos (%, horas ahorradas, $, etc.)
 4. Bridge: Pasos accionables, no solo "contratamos X"
 5. Contraste visual: antes (negativo) vs después (positivo)
+6. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -277,7 +280,7 @@ FORMATO DE RESPUESTA (JSON estricto):
   "slides": [
     {
       "title": "Título (máximo 60 caracteres)",
-      "bullets": ["Bullet 1 (máximo ${input.copyLength === "short" ? "60" : "90"} chars)", "..."],
+      "bullets": ["Bullet 1 (máximo ${input.copyLength === "short" ? "40" : "100"} chars)", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"],
       "visual_direction": "before/after/bridge/cta"
     }
   ],
@@ -312,6 +315,7 @@ COPYWRITING PRINCIPLES:
 3. After: Concrete numbers (%, hours saved, $, etc.)
 4. Bridge: Actionable steps, not just "we hired X"
 5. Visual contrast: before (negative) vs after (positive)
+6. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -326,7 +330,7 @@ RESPONSE FORMAT (strict JSON):
   "slides": [
     {
       "title": "Title (max 60 characters)",
-      "bullets": ["Bullet 1 (max ${input.copyLength === "short" ? "60" : "90"} chars)", "..."],
+      "bullets": ["Bullet 1 (max ${input.copyLength === "short" ? "40" : "100"} chars)", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"],
       "visual_direction": "before/after/bridge/cta"
     }
   ],
@@ -373,6 +377,7 @@ COPYWRITING PRINCIPLES:
 3. Educativo: Paso a paso, "Aquí te muestro cómo..."
 4. Valor primero: 90% educación, 10% promoción
 5. CTA suave: ${ctas[lang][0]}, ${ctas[lang][1]}
+6. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -387,7 +392,7 @@ FORMATO DE RESPUESTA (JSON estricto):
   "slides": [
     {
       "title": "Título educativo (máximo 60 caracteres)",
-      "bullets": ["Insight 1 (máximo ${input.copyLength === "short" ? "60" : "90"} chars)", "..."],
+      "bullets": ["Insight 1 (máximo ${input.copyLength === "short" ? "40" : "100"} chars)", "Insight 2", "Insight 3", "Insight 4", "Insight 5"],
       "visual_direction": "educational/data/framework/cta"
     }
   ],
@@ -421,6 +426,7 @@ COPYWRITING PRINCIPLES:
 3. Educational: Step-by-step, "Let me show you how..."
 4. Value first: 90% education, 10% promotion
 5. Soft CTA: ${ctas[lang][0]}, ${ctas[lang][1]}
+6. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -435,7 +441,7 @@ RESPONSE FORMAT (strict JSON):
   "slides": [
     {
       "title": "Educational title (max 60 characters)",
-      "bullets": ["Insight 1 (max ${input.copyLength === "short" ? "60" : "90"} chars)", "..."],
+      "bullets": ["Insight 1 (max ${input.copyLength === "short" ? "40" : "100"} chars)", "Insight 2", "Insight 3", "Insight 4", "Insight 5"],
       "visual_direction": "educational/data/framework/cta"
     }
   ],
@@ -477,11 +483,12 @@ Slide ${input.slideCount} (CTA): Call to action directo
 
 COPYWRITING PRINCIPLES:
 1. Hook potente: Específico + Numérico + Relevante (ej: "${audience.painPoints[lang]}")
-2. Bullets: Empieza con verbo de acción, máximo ${input.copyLength === "short" ? "60" : "90"} caracteres
-3. Benefits > Features: Enfócate en ${audience.benefits[lang]}
-4. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
-5. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, o similar
-6. Progresión lógica: Cada slide debe conectar naturalmente con el siguiente
+2. Bullets: Empieza con verbo de acción, máximo ${input.copyLength === "short" ? "40" : "100"} caracteres
+3. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
+4. Benefits > Features: Enfócate en ${audience.benefits[lang]}
+5. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
+6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, o similar
+7. Progresión lógica: Cada slide debe conectar naturalmente con el siguiente
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -496,7 +503,7 @@ FORMATO DE RESPUESTA (JSON estricto):
   "slides": [
     {
       "title": "Título del slide (máximo 60 caracteres)",
-      "bullets": ["Bullet 1 (máximo ${input.copyLength === "short" ? "60" : "90"} chars)", "Bullet 2", "Bullet 3"],
+      "bullets": ["Bullet 1 (máximo ${input.copyLength === "short" ? "40" : "100"} chars)", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"],
       "visual_direction": "Descripción visual para este slide"
     }
   ],
@@ -524,11 +531,12 @@ Slide ${input.slideCount} (CTA): Direct call to action
 
 COPYWRITING PRINCIPLES:
 1. Strong hook: Specific + Numeric + Relevant (e.g., "${audience.painPoints[lang]}")
-2. Bullets: Start with action verb, max ${input.copyLength === "short" ? "60" : "90"} characters
-3. Benefits > Features: Focus on ${audience.benefits[lang]}
-4. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
-5. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, or similar
-6. Logical progression: Each slide should flow naturally to the next
+2. Bullets: Start with action verb, max ${input.copyLength === "short" ? "40" : "100"} characters
+3. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
+4. Benefits > Features: Focus on ${audience.benefits[lang]}
+5. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
+6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, or similar
+7. Logical progression: Each slide should flow naturally to the next
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -543,7 +551,7 @@ RESPONSE FORMAT (strict JSON):
   "slides": [
     {
       "title": "Slide title (max 60 characters)",
-      "bullets": ["Bullet 1 (max ${input.copyLength === "short" ? "60" : "90"} chars)", "Bullet 2", "Bullet 3"],
+      "bullets": ["Bullet 1 (max ${input.copyLength === "short" ? "40" : "100"} chars)", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"],
       "visual_direction": "Visual description for this slide"
     }
   ],
@@ -558,8 +566,27 @@ IMPORTANT: Respond ONLY with JSON, no additional explanations.`
 }
 
 /**
- * Main function - now uses generic prompt (template is visual-only)
+ * Main function - FASE 2: Conecta templateId con prompt específico
  */
 export function buildCarouselPrompt(input: GenerationInput, corpus: string): string {
-  return buildGenericPrompt(input, corpus)
+  console.log("[v0] FASE 2: Building prompt for template:", input.templateId)
+
+  // Mapear templateId a prompt específico
+  switch (input.templateId) {
+    case "problem-solution":
+      console.log("[v0] Using Problem-Solution (PAS) prompt")
+      return buildProblemSolutionPrompt(input, corpus)
+
+    case "transformation":
+      console.log("[v0] Using Transformation (BAB) prompt")
+      return buildTransformationPrompt(input, corpus)
+
+    case "educational":
+      console.log("[v0] Using Educational (AIDA) prompt")
+      return buildEducationalPrompt(input, corpus)
+
+    default:
+      console.log("[v0] Using generic prompt (fallback)")
+      return buildGenericPrompt(input, corpus)
+  }
 }

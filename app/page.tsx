@@ -68,21 +68,21 @@ const LANGUAGES = [
 ]
 
 const TECHNICAL_DEPTHS = [
-  { id: "basic", label: "Básico", description: "Conceptos generales" },
-  { id: "intermediate", label: "Intermedio", description: "Detalles técnicos moderados" },
-  { id: "advanced", label: "Avanzado", description: "Profundidad técnica completa" },
+  { id: "basic", label: "Básico", description: "Cero jerga - Analogías simples para todos" },
+  { id: "intermediate", label: "Intermedio", description: "Algunos términos técnicos con explicaciones" },
+  { id: "advanced", label: "Avanzado", description: "Jerga de industria - Sin explicaciones básicas" },
 ]
 
 const TONES = [
-  { id: "formal", label: "Formal" },
-  { id: "conversational", label: "Conversacional" },
-  { id: "inspirational", label: "Inspiracional" },
-  { id: "educational", label: "Educativo" },
+  { id: "formal", label: "Formal", description: "Corporativo ejecutivo - Tercera persona" },
+  { id: "conversational", label: "Conversacional", description: "Cercano y amigable - Como hablar con un amigo" },
+  { id: "inspirational", label: "Inspiracional", description: "Visionario y motivador - Pinta el futuro ideal" },
+  { id: "educational", label: "Educativo", description: "Profesor experto - Paso a paso detallado" },
 ]
 
 const COPY_LENGTHS = [
-  { id: "short", label: "Corto", description: "LinkedIn estándar (150-200 palabras)" },
-  { id: "long", label: "Largo", description: "Storytelling (300-400 palabras)" },
+  { id: "short", label: "Corto", description: "Ultra conciso (máx 40 caracteres por bullet)" },
+  { id: "long", label: "Largo", description: "Explicaciones completas (máx 100 caracteres por bullet)" },
 ]
 
 const OBJECTIVES = [
@@ -141,10 +141,12 @@ export default function HomePage() {
   // Update preview when fontScale changes
   useEffect(() => {
     if (slidesData.length > 0) {
-      const html = renderCarouselHTML(slidesData, input.templateId, fontScale, input.theme)
+      const brandColor = localStorage.getItem("brandColor") || "#BB2649"
+      const brandName = localStorage.getItem("brandName") || "h14z.io"
+      const html = renderCarouselHTML(slidesData, input.templateId, fontScale, input.theme, brandColor, brandName)
       setGeneration((prev) => ({ ...prev, htmlPreview: html }))
     }
-  }, [fontScale, input.theme])
+  }, [fontScale, input.theme, slidesData, input.templateId])
 
   const handleSourceChange = (value: string) => {
     const lines = value.split("\n").map((s) => s.trim())
@@ -219,7 +221,9 @@ export default function HomePage() {
     if (slidesData.length === 0) return
 
     console.log("[v0] Changing template to:", newTemplateId)
-    const html = renderCarouselHTML(slidesData, newTemplateId, fontScale, input.theme)
+    const brandColor = localStorage.getItem("brandColor") || "#BB2649"
+    const brandName = localStorage.getItem("brandName") || "h14z.io"
+    const html = renderCarouselHTML(slidesData, newTemplateId, fontScale, input.theme, brandColor, brandName)
     setGeneration((prev) => ({ ...prev, htmlPreview: html }))
     setInput((prev) => ({ ...prev, templateId: newTemplateId as any }))
   }
@@ -333,7 +337,7 @@ ${input.language === "en" ? "CRITICAL FOR SQUARE FORMAT:" : "CRÍTICO PARA FORMA
 - ${input.language === "en" ? "Every word must add value - no filler" : "Cada palabra debe agregar valor - sin relleno"}
 
 ${input.language === "en" ? "REQUIREMENTS:" : "REQUERIMIENTOS:"}
-- ${input.language === "en" ? "Maintain slide structure (title + 3-4 bullets)" : "Mantén la estructura del slide (título + 3-4 bullets)"}
+- ${input.language === "en" ? "Maintain slide structure (title + 4-5 bullets)" : "Mantén la estructura del slide (título + 4-5 bullets)"}
 - ${input.language === "en" ? "Keep professional LinkedIn tone" : "Mantén el tono profesional de LinkedIn"}
 - ${input.language === "en" ? "Action verbs, specific data, clear benefits" : "Verbos de acción, datos específicos, beneficios claros"}
 - ${input.language === "en" ? "Implement user request while keeping coherence with carousel theme" : "Implementa la solicitud manteniendo coherencia con el tema del carrusel"}
@@ -377,7 +381,9 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       setSlidesData(newSlidesData)
 
       // Re-render the carousel with updated slide
-      const html = renderCarouselHTML(newSlidesData, input.templateId, fontScale, input.theme)
+      const brandColor = localStorage.getItem("brandColor") || "#BB2649"
+      const brandName = localStorage.getItem("brandName") || "h14z.io"
+      const html = renderCarouselHTML(newSlidesData, input.templateId, fontScale, input.theme, brandColor, brandName)
       setGeneration((prev) => ({ ...prev, htmlPreview: html }))
 
       console.log("[v0] Slide edited successfully!")
@@ -510,7 +516,9 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       setSlidesData(payload.slides)
 
       console.log("[v0] Rendering carousel HTML...")
-      const html = renderCarouselHTML(payload.slides, input.templateId, fontScale, input.theme)
+      const brandColor = localStorage.getItem("brandColor") || "#BB2649"
+      const brandName = localStorage.getItem("brandName") || "h14z.io"
+      const html = renderCarouselHTML(payload.slides, input.templateId, fontScale, input.theme, brandColor, brandName)
 
       setGeneration({
         htmlPreview: html,
@@ -550,6 +558,88 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
   // Function to copy individual copy text
   const copyCopyText = (text: string) => {
     navigator.clipboard.writeText(text)
+  }
+
+  // FASE 1.2: Font Loading API - Pre-cargar Inter fonts
+  const preloadFonts = async () => {
+    try {
+      console.log("[v0] Pre-loading Inter fonts...")
+
+      const fontWeights = [
+        { weight: "400", url: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2" },
+        { weight: "500", url: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuOKfAZ9hjp-Ek-_EeA.woff2" },
+        { weight: "600", url: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff2" },
+        { weight: "700", url: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hjp-Ek-_EeA.woff2" },
+        { weight: "800", url: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuDyYAZ9hjp-Ek-_EeA.woff2" },
+        { weight: "900", url: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuBWYAZ9hjp-Ek-_EeA.woff2" },
+      ]
+
+      const fontPromises = fontWeights.map(async ({ weight, url }) => {
+        const font = new FontFace("Inter", `url(${url})`, {
+          weight,
+          style: "normal",
+        })
+        await font.load()
+        document.fonts.add(font)
+        return font
+      })
+
+      await Promise.all(fontPromises)
+      console.log("[v0] All Inter fonts loaded successfully")
+    } catch (error) {
+      console.error("[v0] Error pre-loading fonts:", error)
+      // No lanzar error, continuar con export aunque fonts no carguen
+    }
+  }
+
+  // FASE 3.1: Validación pre-export
+  const validateExportReadiness = (iframeDoc: Document): { valid: boolean; warnings: string[] } => {
+    const warnings: string[] = []
+
+    // Verificar que fonts estén cargadas
+    const interFontLoaded = Array.from(document.fonts).some(
+      font => font.family.includes('Inter') && font.status === 'loaded'
+    )
+    if (!interFontLoaded) {
+      warnings.push("⚠️ Fuentes Inter no detectadas - puede haber fallback fonts")
+    }
+
+    // Verificar que slides existan
+    const slides = iframeDoc.querySelectorAll(".slide")
+    if (slides.length === 0) {
+      warnings.push("❌ No se encontraron slides para exportar")
+      return { valid: false, warnings }
+    }
+
+    // Verificar dimensiones de slides
+    slides.forEach((slide, index) => {
+      const rect = (slide as HTMLElement).getBoundingClientRect()
+      if (rect.width !== 1080 || rect.height !== 1080) {
+        warnings.push(`⚠️ Slide ${index + 1}: Dimensiones incorrectas (${Math.round(rect.width)}x${Math.round(rect.height)}px, esperado: 1080x1080px)`)
+      }
+    })
+
+    // Verificar que contenido no se salga de bounds
+    slides.forEach((slide, index) => {
+      const slideRect = (slide as HTMLElement).getBoundingClientRect()
+      const children = slide.querySelectorAll('*')
+      children.forEach((child) => {
+        const childRect = (child as HTMLElement).getBoundingClientRect()
+        if (
+          childRect.right > slideRect.right + 10 ||
+          childRect.bottom > slideRect.bottom + 10 ||
+          childRect.left < slideRect.left - 10 ||
+          childRect.top < slideRect.top - 10
+        ) {
+          warnings.push(`⚠️ Slide ${index + 1}: Contenido puede estar fuera de límites (revisar overflow)`)
+        }
+      })
+    })
+
+    console.log(`[v0] FASE 3.1: Validación completada - ${warnings.length} warnings`)
+    warnings.forEach(w => console.log(`[v0] ${w}`))
+
+    return { valid: slides.length > 0, warnings }
   }
 
   const downloadImagesWithHTMLToImage = async () => {
@@ -629,7 +719,12 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
     if (!generation.htmlPreview) return
 
     try {
-      console.log("[v0] Starting HIGH-QUALITY PNG export (html2canvas - optimized for LinkedIn)...")
+      console.log("[v0] FASE 1.2: Pre-loading fonts before export...")
+      await preloadFonts()
+      await document.fonts.ready
+      console.log("[v0] Fonts ready in main document")
+
+      console.log("[v0] Starting HIGH-QUALITY JPEG export (html2canvas - optimized)...")
 
       const iframe = document.createElement("iframe")
       iframe.style.position = "fixed"
@@ -645,8 +740,16 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
       iframe.contentDocument?.write(generation.htmlPreview)
       iframe.contentDocument?.close()
 
-      // Increased wait time for fonts and resources to load completely
-      await new Promise((resolve) => setTimeout(resolve, 5000))
+      // FASE 2.2: Esperar fonts en iframe con Font Loading API
+      if (iframe.contentWindow?.document.fonts) {
+        await iframe.contentWindow.document.fonts.ready
+        console.log("[v0] Fonts loaded in iframe successfully")
+      }
+
+      // FASE 2.2: Esperar frames adicionales para rendering completo
+      await new Promise(resolve => requestAnimationFrame(resolve))
+      await new Promise(resolve => requestAnimationFrame(resolve))
+      console.log("[v0] Rendering complete, starting capture...")
 
       const iframeDoc = iframe.contentDocument
       if (!iframeDoc) {
@@ -660,15 +763,23 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
         throw new Error("No se encontraron slides para descargar")
       }
 
-      // Calculate optimal scale for high-DPI displays (retina, 4K, etc)
-      const devicePixelRatio = window.devicePixelRatio || 1
-      const optimalScale = Math.max(4, devicePixelRatio * 2)
+      // FASE 3.1: Validar antes de exportar
+      const validation = validateExportReadiness(iframeDoc)
+      if (!validation.valid) {
+        throw new Error("Validación falló: " + validation.warnings.join(", "))
+      }
+      if (validation.warnings.length > 0) {
+        console.warn(`[v0] FASE 3.1: ${validation.warnings.length} advertencias detectadas (continuando con export)`)
+      }
 
-      console.log(`[v0] Using scale: ${optimalScale}x (devicePixelRatio: ${devicePixelRatio})`)
+      // FASE 1.3: Reducir scale de 3/4 a 2 (suficiente para 2160x2160, menos artifacts)
+      const optimalScale = 2
+
+      console.log(`[v0] FASE 1.3: Using optimized scale: ${optimalScale}x (output: ${1080 * optimalScale}x${1080 * optimalScale}px)`)
 
       for (let i = 0; i < slides.length; i++) {
         const slide = slides[i] as HTMLElement
-        console.log(`[v0] Rendering slide ${i + 1}/${slides.length} to HIGH-QUALITY PNG...`)
+        console.log(`[v0] Rendering slide ${i + 1}/${slides.length} to HIGH-QUALITY JPEG...`)
 
         const canvas = await html2canvas(slide, {
           width: 1080,
@@ -899,7 +1010,10 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
                       <SelectContent className="border-border bg-card">
                         {TONES.map((tone) => (
                           <SelectItem key={tone.id} value={tone.id} className="text-foreground">
-                            {tone.label}
+                            <div className="py-1">
+                              <div className="font-medium">{tone.label}</div>
+                              <div className="text-xs text-muted-foreground">{tone.description}</div>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
