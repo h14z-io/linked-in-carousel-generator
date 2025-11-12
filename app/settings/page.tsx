@@ -35,7 +35,7 @@ export default function SettingsPage() {
   const [brandName, setBrandName] = useState("h14z.io")
   const [brandColor, setBrandColor] = useState("#BB2649")
   const [geminiModel, setGeminiModel] = useState("gemini-2.5-flash")
-  const [exportEngine, setExportEngine] = useState("html2canvas")
+  const [exportEngine, setExportEngine] = useState("dom-to-image")
   const [darkColors, setDarkColors] = useState(DEFAULT_DARK_COLORS)
   const [lightColors, setLightColors] = useState(DEFAULT_LIGHT_COLORS)
   const [saved, setSaved] = useState(false)

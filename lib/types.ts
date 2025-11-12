@@ -17,9 +17,8 @@ export interface GenerationInput {
   slideCount: number
   language: "es" | "en"
   technicalDepth: "basic" | "intermediate" | "advanced"
-  tone: "formal" | "conversational" | "inspirational" | "educational"
+  tone: "formal" | "conversational" | "urgent"
   copyLength: "short" | "long"
-  objective: string
   requiredKeywords: string[]
   theme: ThemeMode
 }

@@ -13,7 +13,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Sparkles, Download, Copy, AlertCircle, Loader2, RefreshCw, Edit2, X, Plus } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Sparkles, Download, Copy, AlertCircle, Loader2, RefreshCw, Edit2, X, Plus, Info } from "lucide-react"
 import type { GenerationInput, GenerationState, GenerationResult, Slide } from "@/lib/types"
 import { safeExtractJSON } from "@/lib/safe-extract-json"
 import { renderCarouselHTML } from "@/lib/template-renderer"
@@ -76,21 +77,12 @@ const TECHNICAL_DEPTHS = [
 const TONES = [
   { id: "formal", label: "Formal", description: "Corporativo ejecutivo - Tercera persona" },
   { id: "conversational", label: "Conversacional", description: "Cercano y amigable - Como hablar con un amigo" },
-  { id: "inspirational", label: "Inspiracional", description: "Visionario y motivador - Pinta el futuro ideal" },
-  { id: "educational", label: "Educativo", description: "Profesor experto - Paso a paso detallado" },
+  { id: "urgent", label: "Urgente", description: "Presión y escasez - Actúa ahora o pierde oportunidad" },
 ]
 
 const COPY_LENGTHS = [
   { id: "short", label: "Corto", description: "Ultra conciso (máx 40 caracteres por bullet)" },
   { id: "long", label: "Largo", description: "Explicaciones completas (máx 100 caracteres por bullet)" },
-]
-
-const OBJECTIVES = [
-  { id: "leads", label: "Generar Leads" },
-  { id: "educate", label: "Educar Audiencia" },
-  { id: "brand", label: "Posicionamiento de Marca" },
-  { id: "engagement", label: "Aumentar Engagement" },
-  { id: "thought-leadership", label: "Thought Leadership" },
 ]
 
 export default function HomePage() {
@@ -104,7 +96,6 @@ export default function HomePage() {
     technicalDepth: "intermediate",
     tone: "conversational",
     copyLength: "short",
-    objective: "leads",
     requiredKeywords: [],
     theme: "dark",
   })
@@ -831,13 +822,103 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
     }
   }
 
+  const downloadImagesWithDomToImage = async () => {
+    if (!generation.htmlPreview) return
+
+    try {
+      console.log("[v0] Starting PIXEL-PERFECT export with dom-to-image-more...")
+
+      // Dynamic import to avoid SSR issues
+      const domtoimage = await import("dom-to-image-more").then((mod) => mod.default)
+
+      const iframe = document.createElement("iframe")
+      iframe.style.position = "fixed"
+      iframe.style.left = "-9999px"
+      iframe.style.top = "0"
+      iframe.style.width = "1080px"
+      iframe.style.height = "1080px"
+      iframe.style.border = "none"
+      iframe.style.visibility = "visible"
+      document.body.appendChild(iframe)
+
+      iframe.contentDocument?.open()
+      iframe.contentDocument?.write(generation.htmlPreview)
+      iframe.contentDocument?.close()
+
+      // Esperar fuentes
+      if (iframe.contentWindow?.document.fonts) {
+        await iframe.contentWindow.document.fonts.ready
+        console.log("[v0] Fonts loaded successfully")
+      }
+
+      // Esperar rendering completo
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      const iframeDoc = iframe.contentDocument
+      if (!iframeDoc) {
+        throw new Error("No se pudo acceder al contenido del iframe")
+      }
+
+      const slides = iframeDoc.querySelectorAll(".slide")
+      console.log("[v0] Found", slides.length, "slides")
+
+      if (slides.length === 0) {
+        throw new Error("No se encontraron slides para descargar")
+      }
+
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i] as HTMLElement
+        console.log(`[v0] Exporting slide ${i + 1}/${slides.length} with dom-to-image...`)
+
+        try {
+          // dom-to-image-more con configuración optimizada
+          const dataUrl = await domtoimage.toJpeg(slide, {
+            width: 1080,
+            height: 1080,
+            quality: 0.95,
+            bgcolor: input.theme === "dark" ? "#0B0B0E" : "#FFFFFF",
+            style: {
+              transform: 'scale(1)',
+              transformOrigin: 'top left',
+            }
+          })
+
+          const link = document.createElement("a")
+          link.download = `carousel-slide-${String(i + 1).padStart(2, "0")}.jpg`
+          link.href = dataUrl
+          link.click()
+
+          console.log(`[v0] Slide ${i + 1} exported successfully`)
+        } catch (slideError) {
+          console.error(`[v0] Error exporting slide ${i + 1}:`, slideError)
+          throw new Error(`No se pudo exportar slide ${i + 1}`)
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+
+      document.body.removeChild(iframe)
+      console.log("[v0] All slides exported successfully with dom-to-image")
+    } catch (error) {
+      console.error("[v0] dom-to-image export error:", error)
+      setError(
+        error instanceof Error
+          ? `Error al descargar con dom-to-image: ${error.message}`
+          : "Error al descargar las imágenes. Intenta de nuevo.",
+      )
+    }
+  }
+
   const downloadImages = async () => {
-    const exportEngine = localStorage.getItem("exportEngine") || "html2canvas"
+    const exportEngine = localStorage.getItem("exportEngine") || "dom-to-image"
 
     if (exportEngine === "html-to-image") {
       await downloadImagesWithHTMLToImage()
-    } else {
+    } else if (exportEngine === "html2canvas") {
       await downloadImagesWithHTML2Canvas()
+    } else {
+      // Default: dom-to-image (nuevo motor)
+      await downloadImagesWithDomToImage()
     }
   }
 
@@ -1046,30 +1127,6 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="objective" className="text-foreground">
-                      Objetivo
-                    </Label>
-                    <Select
-                      value={input.objective}
-                      onValueChange={(v) => setInput((prev) => ({ ...prev, objective: v }))}
-                    >
-                      <SelectTrigger
-                        id="objective"
-                        className="h-auto w-full min-h-[2.5rem] border-input bg-secondary text-foreground"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="border-border bg-card">
-                        {OBJECTIVES.map((obj) => (
-                          <SelectItem key={obj.id} value={obj.id} className="text-foreground">
-                            {obj.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1119,6 +1176,71 @@ ${input.language === "en" ? "Respond ONLY with valid JSON:" : "Responde SOLO con
                     </div>
                   )}
                 </div>
+              </div>
+
+              <Separator className="bg-border" />
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Framework Narrativo</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Estructura de storytelling que define el objetivo y flujo del carrusel
+                  </p>
+                </div>
+
+                <TooltipProvider>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {TEMPLATES.map((template) => (
+                      <Tooltip key={template.id}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => setInput((prev) => ({ ...prev, templateId: template.id as any }))}
+                            className={`flex flex-col items-start gap-2 p-4 rounded-lg border-2 text-left transition-all relative ${
+                              input.templateId === template.id
+                                ? "border-primary bg-primary/5 shadow-md"
+                                : "border-border hover:border-primary/50 bg-secondary/30"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                                input.templateId === template.id
+                                  ? "border-primary"
+                                  : "border-muted-foreground/40"
+                              }`}>
+                                {input.templateId === template.id && (
+                                  <div className="h-2 w-2 rounded-full bg-primary" />
+                                )}
+                              </div>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                            <div className="flex flex-col gap-1 w-full">
+                              <span className="text-sm font-semibold leading-none text-foreground">
+                                {template.label}
+                              </span>
+                              <span className="text-xs font-medium text-primary">
+                                {template.subtitle}
+                              </span>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {template.description}
+                              </p>
+                            </div>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs bg-card border-border text-foreground p-3">
+                          <div className="space-y-2">
+                            <div className="font-semibold text-sm">{template.label} ({template.subtitle})</div>
+                            <div className="text-xs text-muted-foreground">{template.description}</div>
+                            <div className="text-xs">
+                              <span className="font-medium text-foreground">Estructura:</span>
+                              <br />
+                              <span className="text-muted-foreground">{template.structure}</span>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </TooltipProvider>
               </div>
 
               <Separator className="bg-border" />

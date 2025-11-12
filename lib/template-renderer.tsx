@@ -60,168 +60,231 @@ export function renderCarouselHTML(
 
   const templateStyles = {
     "problem-solution": `
-      /* MINIMAL TECH - Brutalist, espacios amplios, tipografía protagonista */
+      /* URGENCY ALERT - Alarmante, directo, enfocado en el problema */
       .slide {
-        border-left: 2px solid ${colors.pri};
-        box-shadow: none;
-        background: ${colors.surf};
+        border-left: 10px solid ${colors.pri};
+        border-top: 3px solid ${colors.pri};
+        box-shadow: inset 0 0 0 1px ${colors.pri}40;
+        background: ${theme === "dark" ? `linear-gradient(135deg, ${colors.surf} 0%, rgba(187, 38, 73, 0.05) 100%)` : `linear-gradient(135deg, ${colors.surf} 0%, rgba(187, 38, 73, 0.03) 100%)`};
         overflow: visible;
-        padding: 60px 80px;
+        padding: 50px 70px;
+        position: relative;
+      }
+      .watermark {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: ${80 * fontScale}px;
+        opacity: 0.08;
+        line-height: 1;
+        pointer-events: none;
       }
       .slide-header {
-        margin-bottom: 60px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
       }
       .slide-number {
-        color: ${colors.mut};
-        font-size: ${48 * fontScale}px;
-        font-weight: 300;
-        line-height: 1;
-        display: block;
-        opacity: 0.5;
+        color: ${colors.pri};
+        font-size: ${68 * fontScale}px;
+        font-weight: 900;
+        line-height: 0.9;
+        display: inline-block;
+        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.15)" : "rgba(187, 38, 73, 0.1)"};
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: 2px solid ${colors.pri};
       }
       .slide-icon {
         display: none;
       }
       .title {
-        font-size: ${72 * fontScale}px;
+        font-size: ${62 * fontScale}px;
         font-weight: 900;
         color: ${colors.txt};
-        line-height: 1.05;
-        margin-bottom: 60px;
-        letter-spacing: -0.03em;
-        text-transform: uppercase;
+        line-height: 1.1;
+        margin-bottom: 50px;
+        letter-spacing: -0.02em;
+        text-transform: none;
+        position: relative;
+        padding-left: 24px;
+        border-left: 4px solid ${colors.pri};
+      }
+      .title-bar {
+        display: none;
       }
       .bullets {
-        gap: 50px;
+        gap: 32px;
       }
       .bullets div {
-        font-size: ${28 * fontScale}px;
-        font-weight: 500;
+        font-size: ${26 * fontScale}px;
+        font-weight: 600;
         color: ${colors.txt};
-        line-height: 1.6;
-        padding-left: 40px;
+        line-height: 1.5;
+        padding-left: 50px;
         position: relative;
         margin-bottom: 0;
+        border-left: 3px solid ${theme === "dark" ? "rgba(187, 38, 73, 0.2)" : "rgba(187, 38, 73, 0.15)"};
+        padding-top: 8px;
+        padding-bottom: 8px;
       }
-      .bullets div::before {
-        content: '→';
+      .bullet-icon {
         color: ${colors.pri};
-        font-size: ${32 * fontScale}px;
-        font-weight: 700;
+        font-size: ${36 * fontScale}px;
+        font-weight: 900;
         position: absolute;
-        left: 0;
-        top: 0px;
+        left: 12px;
+        top: 4px;
       }
     `,
     transformation: `
-      /* DATA DRIVEN - Dashboard style, números grandes, barra de progreso */
+      /* METRICS DASHBOARD - Progreso, crecimiento, antes/después */
       .slide {
-        border: 4px double ${colors.pri};
-        box-shadow: 0 8px 24px rgba(0, 0, 0, ${theme === "dark" ? "0.4" : "0.15"});
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, ${theme === "dark" ? "0.3" : "0.1"});
         background: ${colors.surf};
         position: relative;
         overflow: visible;
-        padding: 56px;
+        padding: 60px 70px 60px 80px;
       }
-      .slide::after {
-        content: '';
+      .vertical-gradient-bar {
         position: absolute;
-        bottom: 0;
+        left: 0;
+        top: 60px;
+        bottom: 60px;
+        width: 12px;
+        background: linear-gradient(180deg, rgba(187, 38, 73, 0) 0%, ${colors.pri} 50%, rgba(187, 38, 73, 0) 100%);
+        border-radius: 0 6px 6px 0;
+      }
+      .top-gradient-bar {
+        position: absolute;
+        top: 35px;
         left: 0;
         right: 0;
-        height: 8px;
-        background: ${colors.pri};
-        opacity: 0.8;
+        height: 6px;
+        background: linear-gradient(90deg, ${colors.pri} 0%, rgba(187, 38, 73, 0.6) 100%);
       }
       .slide-header {
         position: relative;
-        border: 2px solid ${colors.pri};
-        padding: 20px 32px;
-        margin-bottom: 40px;
-        display: flex;
+        margin-bottom: 50px;
+        display: inline-flex;
         align-items: center;
-        gap: 16px;
-        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.08)" : "rgba(187, 38, 73, 0.03)"};
+        gap: 20px;
       }
       .slide-number {
-        color: ${colors.pri};
+        color: ${colors.surf};
+        background: ${colors.pri};
         font-size: ${56 * fontScale}px;
         font-weight: 900;
         line-height: 1;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        padding: 16px 28px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(187, 38, 73, 0.4);
+        position: relative;
       }
       .slide-icon {
-        width: ${48 * fontScale}px;
-        height: ${48 * fontScale}px;
-        color: ${colors.pri};
-        opacity: 1;
+        display: none;
       }
       .title {
-        font-size: ${54 * fontScale}px;
+        font-size: ${58 * fontScale}px;
         font-weight: 800;
         color: ${colors.txt};
         line-height: 1.15;
-        margin-bottom: 36px;
+        margin-bottom: 45px;
         letter-spacing: -0.02em;
+        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.05)" : "rgba(187, 38, 73, 0.02)"};
+        padding: 20px 25px;
+        border-left: 5px solid ${colors.pri};
+        border-radius: 0 8px 8px 0;
       }
       .bullets {
-        gap: 32px;
+        gap: 24px;
       }
       .bullets div {
-        font-size: ${32 * fontScale}px;
+        font-size: ${28 * fontScale}px;
         font-weight: 600;
         color: ${colors.txt};
-        line-height: 1.5;
-        padding-left: 48px;
+        line-height: 1.6;
+        padding: 18px 24px 18px 60px;
         position: relative;
         margin-bottom: 0;
+        background: ${theme === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)"};
+        border-radius: 10px;
+        border: 1px solid ${theme === "dark" ? "rgba(187, 38, 73, 0.15)" : "rgba(187, 38, 73, 0.1)"};
       }
-      .bullets div::before {
-        content: '✓';
-        color: ${colors.pri};
-        font-size: ${40 * fontScale}px;
+      .bullet-icon {
+        color: ${colors.surf};
+        background: ${colors.pri};
+        font-size: ${28 * fontScale}px;
         font-weight: 900;
         position: absolute;
-        left: 0;
-        top: -2px;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
       }
     `,
     educational: `
-      /* EDITORIAL CLEAN - Modern, clean typography, profesional */
+      /* MINIMAL ACADEMIC - Limpio, espacioso, educativo profesional */
       .slide {
-        border: 1px solid ${colors.pri};
-        box-shadow: 0 2px 8px rgba(0, 0, 0, ${theme === "dark" ? "0.25" : "0.1"});
+        border: none;
+        box-shadow: none;
         background: ${colors.surf};
         overflow: visible;
-        padding: 64px 56px;
+        padding: 80px 90px;
+        position: relative;
+      }
+      .slide::before {
+        content: '';
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        right: 30px;
+        bottom: 30px;
+        border: 1px solid ${theme === "dark" ? "rgba(187, 38, 73, 0.15)" : "rgba(187, 38, 73, 0.12)"};
+        border-radius: 4px;
+        pointer-events: none;
       }
       .slide-header {
-        margin-bottom: 48px;
-        text-align: center;
-        border-bottom: 2px solid ${colors.pri};
-        padding-bottom: 24px;
+        margin-bottom: 55px;
+        display: flex;
+        align-items: baseline;
+        gap: 20px;
+        position: relative;
       }
       .slide-number {
         font-family: 'Inter', sans-serif;
         color: ${colors.pri};
-        font-size: ${64 * fontScale}px;
-        font-weight: 800;
-        line-height: 1;
-        display: block;
-        margin-bottom: 12px;
+        font-size: ${42 * fontScale}px;
+        font-weight: 300;
+        line-height: 1.2;
+        display: inline-block;
         position: relative;
+        opacity: 0.9;
+        padding-bottom: 8px;
+        border-bottom: 2px solid ${colors.pri};
       }
-      .slide-number::before,
-      .slide-number::after {
-        content: '────';
-        font-family: 'Inter', sans-serif;
+      .step-label {
         display: block;
-        font-size: ${20 * fontScale}px;
-        color: ${colors.pri};
+        font-size: ${12 * fontScale}px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         opacity: 0.5;
-        letter-spacing: 0.2em;
+        color: ${colors.pri};
+        margin-bottom: 8px;
+      }
+      .step-underline {
+        display: none;
       }
       .slide-icon {
         display: none;
@@ -229,45 +292,52 @@ export function renderCarouselHTML(
       .title {
         font-family: 'Inter', sans-serif;
         font-size: ${52 * fontScale}px;
-        font-weight: 700;
+        font-weight: 600;
         color: ${colors.txt};
-        line-height: 1.25;
-        margin-bottom: 40px;
-        letter-spacing: -0.02em;
+        line-height: 1.3;
+        margin-bottom: 50px;
+        letter-spacing: -0.015em;
         position: relative;
-        padding-bottom: 20px;
-      }
-      .title::after {
-        content: '══════';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        font-size: ${16 * fontScale}px;
-        color: ${colors.pri};
-        letter-spacing: 0.1em;
-        opacity: 0.6;
       }
       .bullets {
-        gap: 28px;
+        gap: 30px;
       }
       .bullets div {
-        font-size: ${26 * fontScale}px;
+        font-size: ${24 * fontScale}px;
         font-weight: 400;
         color: ${colors.txt};
-        line-height: 1.7;
-        padding-left: 40px;
+        line-height: 1.75;
+        padding-left: 55px;
         position: relative;
         margin-bottom: 0;
         text-align: left;
       }
-      .bullets div::before {
-        content: '•';
-        color: ${colors.pri};
-        font-size: ${40 * fontScale}px;
-        font-weight: 400;
+      .bullet-number {
+        color: ${colors.surf};
+        background: ${colors.pri};
+        font-size: ${18 * fontScale}px;
+        font-weight: 700;
         position: absolute;
         left: 0;
-        top: -4px;
+        top: 2px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-family: 'Inter', sans-serif;
+      }
+      .step-connector {
+        position: absolute;
+        left: 17px;
+        top: 42px;
+        bottom: -32px;
+        width: 2px;
+        background: ${theme === "dark" ? "rgba(187, 38, 73, 0.2)" : "rgba(187, 38, 73, 0.15)"};
+      }
+      .bullets div:last-child .step-connector {
+        display: none;
       }
     `,
   }
@@ -398,16 +468,43 @@ export function renderCarouselHTML(
 
   const slidesHTML = (slides || [])
     .map(
-      (s, i) => `
+      (s, i) => {
+        // Template-specific decorative elements as real HTML
+        let decorativeElements = ''
+        let headerExtras = ''
+        let titleExtras = ''
+
+        if (templateId === 'problem-solution') {
+          decorativeElements = `<div class="watermark">⚠</div>`
+        } else if (templateId === 'transformation') {
+          decorativeElements = `<div class="vertical-gradient-bar"></div><div class="top-gradient-bar"></div>`
+        } else if (templateId === 'educational') {
+          // Para educational, agregamos el label dentro del número
+        }
+
+        // Bullet markers as real HTML based on template
+        const getBulletMarker = (index: number) => {
+          if (templateId === 'problem-solution') return `<span class="bullet-icon">✗</span>`
+          if (templateId === 'transformation') return `<span class="bullet-icon">→</span>`
+          if (templateId === 'educational') return `<span class="bullet-number">${index + 1}</span><div class="step-connector"></div>`
+          return ''
+        }
+
+        const slideNumberContent = templateId === 'educational'
+          ? `<span class="slide-number"><span class="step-label">Paso</span>${String(i + 1).padStart(2, "0")}</span>`
+          : `<span class="slide-number">${String(i + 1).padStart(2, "0")}</span>`
+
+        return `
     <section class="slide">
+      ${decorativeElements}
       <div>
         <div class="slide-header">
-          <span class="slide-number">${String(i + 1).padStart(2, "0")}</span>
+          ${slideNumberContent}
           <div class="slide-icon">${getIconForSlide(templateId, i)}</div>
         </div>
         <h2 class="title">${s.title || ""}</h2>
         <div class="bullets">
-          ${(s.bullets || []).map((b) => `<div>${b}</div>`).join("")}
+          ${(s.bullets || []).map((b, idx) => `<div>${getBulletMarker(idx)}${b}</div>`).join("")}
         </div>
       </div>
       <div class="footer">
@@ -415,7 +512,8 @@ export function renderCarouselHTML(
         <span class="branding"><span class="highlight">H</span>idalgo <span class="highlight">H</span>ernández | <span class="highlight">S</span>trategic <span class="highlight">A</span>dvisory</span>
       </div>
     </section>
-  `,
+  `
+      },
     )
     .join("")
 

@@ -70,13 +70,9 @@ const TONE_STYLES = {
     es: "CONVERSACIONAL: Habla como a un amigo en un café. Primera y segunda persona. Preguntas retóricas obligatorias ('¿Te suena familiar?', '¿Sabes qué descubrí?'). Contracciones naturales. Emojis opcionales. Tono: cálido, cercano, humano. Ejemplo: 'Mira, te cuento algo...'",
     en: "CONVERSATIONAL: Talk like to a friend at a coffee shop. First and second person. Rhetorical questions required ('Sound familiar?', 'Know what I discovered?'). Natural contractions. Optional emojis. Tone: warm, close, human. Example: 'Look, let me tell you something...'",
   },
-  inspirational: {
-    es: "INSPIRACIONAL: Lenguaje visionario y motivador. Verbos de acción poderosos (transforma, revoluciona, impulsa). Pinta el futuro ideal. Usa metáforas épicas ('imagina un mundo donde...', 'el futuro no se predice, se construye'). Emoción alta. Call to greatness. Ejemplo: 'No se trata solo de X, se trata de transformar...'",
-    en: "INSPIRATIONAL: Visionary, motivating language. Powerful action verbs (transform, revolutionize, propel). Paint the ideal future. Use epic metaphors ('imagine a world where...', 'the future isn't predicted, it's built'). High emotion. Call to greatness. Example: 'It's not just about X, it's about transforming...'",
-  },
-  educational: {
-    es: "EDUCACIONAL: Profesor experto explicando paso a paso. Usa 'Aquí te muestro cómo...', 'Paso 1:', 'Lo que esto significa es...'. Incluye micro-ejemplos en cada punto. Anticipa preguntas ('Tal vez te preguntes...'). Tono: paciente, detallado, clarificador. Evita asumir conocimiento previo.",
-    en: "EDUCATIONAL: Expert teacher explaining step-by-step. Use 'Here's how...', 'Step 1:', 'What this means is...'. Include micro-examples in each point. Anticipate questions ('You might be wondering...'). Tone: patient, detailed, clarifying. Avoid assuming prior knowledge.",
+  urgent: {
+    es: "URGENTE: Lenguaje de presión y escasez. Usa palabras de urgencia ('ahora', 'antes de que', 'solo quedan', 'última oportunidad'). Crea FOMO (fear of missing out). Verbos imperativos (actúa, aprovecha, no pierdas). Números específicos de tiempo ('en las próximas 48h', 'quedan 3 cupos'). Tono: directo, apremiante, action-driving. Ejemplo: 'Si no actúas hoy, tus competidores lo harán mañana.'",
+    en: "URGENT: Pressure and scarcity language. Use urgency words ('now', 'before', 'only X left', 'last chance'). Create FOMO (fear of missing out). Imperative verbs (act, seize, don't miss). Specific time numbers ('in the next 48h', '3 spots left'). Tone: direct, pressing, action-driving. Example: 'If you don't act today, your competitors will tomorrow.'",
   },
 }
 
@@ -128,15 +124,25 @@ export function buildProblemSolutionPrompt(input: GenerationInput, corpus: strin
   const audience = AUDIENCE_PROFILES[input.audienceMode]
   const toneStyle = TONE_STYLES[input.tone][lang]
   const depthLevel = DEPTH_LEVELS[input.technicalDepth][lang]
-  const ctas = OBJECTIVE_CTAS[input.objective] || OBJECTIVE_CTAS.leads
+  // PAS Framework → Objetivo implícito: Generar Leads
+  const ctas = OBJECTIVE_CTAS.leads
 
   const promptEs = `Eres un Senior B2B Marketing Strategist especializado en LinkedIn con 10+ años creando contenido que convierte.
 
 CONTEXTO:
 - Audiencia: ${input.audienceMode.toUpperCase()} (Pain points: ${audience.painPoints[lang]})
-- Objetivo: ${input.objective}
+- Objetivo: Generar Leads (PAS Framework - venta directa)
 - Template: Problem-Agitate-Solution (PAS Framework)
 - Número de slides: ${input.slideCount}
+
+ANÁLISIS DE CONTENIDO FUENTE:
+El contenido base puede venir de un URL extraído o texto directo. Tu trabajo es EXTRAER lo más valioso:
+
+1. PRIORIZA: Busca datos numéricos, estadísticas, casos concretos, métricas de impacto
+2. SINTETIZA: Si el contenido es largo (>2000 palabras), extrae las 3-5 ideas MÁS relevantes para ${input.audienceMode}
+3. EXPANDE: Si el contenido es corto (<200 palabras), expande con ejemplos específicos usando ${audience.vocabulary[lang]}
+4. IDENTIFICA: Números concretos para el hook (%, tiempo, dinero, ROI)
+5. FALLBACK: Si el contenido es insuficiente o irrelevante, genera contenido basándote en ${audience.painPoints[lang]} y ${audience.benefits[lang]} con ejemplos de industria
 
 TAREA:
 Crea un carrusel de LinkedIn de ${input.slideCount} slides siguiendo EXACTAMENTE la estructura PAS:
@@ -147,13 +153,39 @@ Slides 2-${Math.floor(input.slideCount * 0.4)} (AGITATE): Consecuencias del prob
 Slides ${Math.floor(input.slideCount * 0.4) + 1}-${input.slideCount - 1} (SOLUTION): Tu solución paso a paso con beneficios claros
 Slide ${input.slideCount} (CTA): Call to action directo
 
-COPYWRITING PRINCIPLES:
-1. Hook: Específico + Numérico + Relevante (ej: "${audience.painPoints[lang]}")
+COPYWRITING PRINCIPLES (con ejemplos):
+1. Hook: Específico + Numérico + Relevante
+   ✅ BUENO: "CI/CD: ¿45 minutos de pipeline matando tu productividad?"
+   ❌ MALO: "Los pipelines lentos son un problema"
+
 2. Bullets: Empieza con verbo de acción, máximo ${input.copyLength === "short" ? "40" : "100"} caracteres
+   ✅ BUENO: "Reduce deployments de 1h a 6min con pipelines automatizados"
+   ❌ MALO: "Los pipelines automáticos son buenos"
+
 3. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
+
 4. Benefits > Features: Enfócate en ${audience.benefits[lang]}
+   ✅ BUENO: "Ahorra 200 horas/mes de compliance manual"
+   ❌ MALO: "Tiene funcionalidad de compliance"
+
 5. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
+
 6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, o similar
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Usa número específico + emoji estratégico si es apropiado (🚨, 💡, 📊)
+2. STATS: Incluye al menos 2-3 números concretos en el carrusel
+3. CTA: Si objetivo es "engagement", termina con pregunta abierta
+4. HASHTAGS: Genera 3-5 hashtags relevantes específicos para ${input.audienceMode}:
+   • Tech: #DevOps #CI/CD #CloudNative #TechLeadership #SoftwareEngineering
+   • Finance: #CFO #ROI #FinTech #CostOptimization #FinancialStrategy
+   • Exec: #DigitalTransformation #Leadership #Innovation #Strategy #BusinessGrowth
+   • Managers: #TeamManagement #Productivity #AgileManagement #Leadership #TeamBuilding
+5. TIMING: Recomienda mejores días/horas según audiencia:
+   • Tech: Martes-Jueves 8-10am (developers checking morning updates)
+   • Finance: Lunes-Miércoles 7-9am (executives early morning review)
+   • Exec: Lunes-Viernes 6-8am (C-level early risers, pre-meetings)
+   • Managers: Martes-Jueves 12-2pm (lunch break browsing)
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -172,9 +204,9 @@ FORMATO DE RESPUESTA (JSON estricto):
       "visual_direction": "Descripción visual para este slide"
     }
   ],
-  "post_copies": [{"audience": "tech", "text": "LinkedIn post copy aquí"}],
-  "hashtags": ["#hashtag1", "#hashtag2"],
-  "schedule_suggestions": ["Mejor día/hora para postear"]
+  "post_copies": [{"audience": "${input.audienceMode}", "text": "LinkedIn post copy aquí"}],
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Día y hora óptima basado en audiencia ${input.audienceMode}"]
 }
 
 IMPORTANTE: Responde SOLO con el JSON, sin explicaciones adicionales.`
@@ -183,9 +215,18 @@ IMPORTANTE: Responde SOLO con el JSON, sin explicaciones adicionales.`
 
 CONTEXT:
 - Audience: ${input.audienceMode.toUpperCase()} (Pain points: ${audience.painPoints[lang]})
-- Objective: ${input.objective}
+- Objective: Generate Leads (PAS Framework - direct sales)
 - Template: Problem-Agitate-Solution (PAS Framework)
 - Slide count: ${input.slideCount}
+
+SOURCE CONTENT ANALYSIS:
+The source content may come from extracted URLs or direct text. Your job is to EXTRACT the most valuable insights:
+
+1. PRIORITIZE: Look for numeric data, statistics, concrete cases, impact metrics
+2. SYNTHESIZE: If content is long (>2000 words), extract the 3-5 MOST relevant ideas for ${input.audienceMode}
+3. EXPAND: If content is short (<200 words), expand with specific examples using ${audience.vocabulary[lang]}
+4. IDENTIFY: Concrete numbers for the hook (%, time, money, ROI)
+5. FALLBACK: If content is insufficient or irrelevant, generate content based on ${audience.painPoints[lang]} and ${audience.benefits[lang]} with industry examples
 
 TASK:
 Create a LinkedIn carousel with ${input.slideCount} slides following EXACTLY the PAS structure:
@@ -196,13 +237,39 @@ Slides 2-${Math.floor(input.slideCount * 0.4)} (AGITATE): Problem consequences -
 Slides ${Math.floor(input.slideCount * 0.4) + 1}-${input.slideCount - 1} (SOLUTION): Your step-by-step solution with clear benefits
 Slide ${input.slideCount} (CTA): Direct call to action
 
-COPYWRITING PRINCIPLES:
-1. Hook: Specific + Numeric + Relevant (e.g., "${audience.painPoints[lang]}")
+COPYWRITING PRINCIPLES (with examples):
+1. Hook: Specific + Numeric + Relevant
+   ✅ GOOD: "CI/CD: Are 45-minute pipelines killing your productivity?"
+   ❌ BAD: "Slow pipelines are a problem"
+
 2. Bullets: Start with action verb, max ${input.copyLength === "short" ? "40" : "100"} characters
+   ✅ GOOD: "Reduce deployments from 1h to 6min with automated pipelines"
+   ❌ BAD: "Automated pipelines are good"
+
 3. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
+
 4. Benefits > Features: Focus on ${audience.benefits[lang]}
+   ✅ GOOD: "Save 200 hours/month on manual compliance"
+   ❌ BAD: "Has compliance functionality"
+
 5. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
+
 6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, or similar
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Use specific number + strategic emoji if appropriate (🚨, 💡, 📊)
+2. STATS: Include at least 2-3 concrete numbers in the carousel
+3. CTA: If objective is "engagement", end with open question
+4. HASHTAGS: Generate 3-5 relevant hashtags specific to ${input.audienceMode}:
+   • Tech: #DevOps #CI/CD #CloudNative #TechLeadership #SoftwareEngineering
+   • Finance: #CFO #ROI #FinTech #CostOptimization #FinancialStrategy
+   • Exec: #DigitalTransformation #Leadership #Innovation #Strategy #BusinessGrowth
+   • Managers: #TeamManagement #Productivity #AgileManagement #Leadership #TeamBuilding
+5. TIMING: Recommend best days/times by audience:
+   • Tech: Tuesday-Thursday 8-10am (developers checking morning updates)
+   • Finance: Monday-Wednesday 7-9am (executives early morning review)
+   • Exec: Monday-Friday 6-8am (C-level early risers, pre-meetings)
+   • Managers: Tuesday-Thursday 12-2pm (lunch break browsing)
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -221,9 +288,9 @@ RESPONSE FORMAT (strict JSON):
       "visual_direction": "Visual description for this slide"
     }
   ],
-  "post_copies": [{"audience": "tech", "text": "LinkedIn post copy here"}],
-  "hashtags": ["#hashtag1", "#hashtag2"],
-  "schedule_suggestions": ["Best day/time to post"]
+  "post_copies": [{"audience": "${input.audienceMode}", "text": "LinkedIn post copy here"}],
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Optimal day and time based on ${input.audienceMode} audience"]
 }
 
 IMPORTANT: Respond ONLY with JSON, no additional explanations.`
@@ -239,15 +306,25 @@ export function buildTransformationPrompt(input: GenerationInput, corpus: string
   const audience = AUDIENCE_PROFILES[input.audienceMode]
   const toneStyle = TONE_STYLES[input.tone][lang]
   const depthLevel = DEPTH_LEVELS[input.technicalDepth][lang]
-  const ctas = OBJECTIVE_CTAS[input.objective] || OBJECTIVE_CTAS.leads
+  // BAB Framework → Objetivo implícito: Posicionamiento de Marca (casos de éxito, ROI)
+  const ctas = OBJECTIVE_CTAS.brand
 
   const promptEs = `Eres un Senior B2B Marketing Strategist especializado en casos de éxito y storytelling de transformación.
 
 CONTEXTO:
 - Audiencia: ${input.audienceMode.toUpperCase()}
-- Objetivo: Mostrar transformación/resultados (${input.objective})
+- Objetivo: Posicionamiento de Marca (BAB Framework - casos de éxito, ROI)
 - Template: Before-After-Bridge (BAB Framework)
 - Número de slides: ${input.slideCount}
+
+ANÁLISIS DE CONTENIDO FUENTE:
+El contenido base puede venir de un URL extraído o texto directo. Tu trabajo es EXTRAER lo más valioso:
+
+1. PRIORIZA: Busca métricas de transformación, antes/después concretos, ROI, tiempo ahorrado
+2. SINTETIZA: Si el contenido es largo (>2000 palabras), extrae el caso de transformación más impactante
+3. EXPANDE: Si el contenido es corto (<200 palabras), expande con ejemplos de transformación usando ${audience.benefits[lang]}
+4. IDENTIFICA: Contraste numérico claro (de X a Y, reducción de Z%, ahorro de $)
+5. FALLBACK: Si el contenido es insuficiente, genera caso de transformación basándote en ${audience.painPoints[lang]} → ${audience.benefits[lang]}
 
 TAREA:
 Crea un carrusel mostrando una transformación clara usando el framework BAB:
@@ -259,13 +336,43 @@ Slides ${Math.floor(input.slideCount * 0.3) + 1}-${Math.floor(input.slideCount *
 Slides ${Math.floor(input.slideCount * 0.6) + 1}-${input.slideCount - 1} (BRIDGE): Cómo se logró - proceso/metodología
 Slide ${input.slideCount} (CTA): Siguiente paso
 
-COPYWRITING PRINCIPLES:
-1. Hook: Promesa + Métrica (ej: "De 60 min a 5 min: Cómo optimizamos...")
+COPYWRITING PRINCIPLES (con ejemplos):
+1. Hook: Promesa + Métrica
+   ✅ BUENO: "De 60 minutos a 5 minutos: Cómo optimizamos deployments en 3 meses"
+   ❌ MALO: "Mejoramos nuestros deployments"
+
 2. Before: Pain points reales y específicos
-3. After: Números concretos (%, horas ahorradas, $, etc.)
+   ✅ BUENO: "Deployments fallaban 40% del tiempo, equipo trabajando hasta 10pm"
+   ❌ MALO: "Teníamos problemas con deployments"
+
+3. After: Números concretos (%, horas ahorradas, $)
+   ✅ BUENO: "95% success rate, equipo sale a las 6pm, ahorro $50k/año"
+   ❌ MALO: "Ahora funciona mejor"
+
 4. Bridge: Pasos accionables, no solo "contratamos X"
+   ✅ BUENO: "Implementamos pipelines paralelos + tests automatizados + rollback automático"
+   ❌ MALO: "Contratamos una herramienta de CI/CD"
+
 5. Contraste visual: antes (negativo) vs después (positivo)
+
 6. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
+
+7. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Usa contraste numérico extremo + emoji si apropiado (📈, ⚡, 🚀)
+2. BEFORE/AFTER: Contraste dramático con números específicos
+3. CTA: Si objetivo es "engagement", pregunta "¿Cuál fue tu mayor obstáculo en transformación similar?"
+4. HASHTAGS: Genera 3-5 hashtags relevantes para ${input.audienceMode}:
+   • Tech: #DevOps #CloudTransformation #TechOptimization #DigitalTransformation #AgileTransformation
+   • Finance: #ROI #CostReduction #FinancialTransformation #OPEX #DigitalFinance
+   • Exec: #BusinessTransformation #ChangeManagement #Innovation #DigitalStrategy #Leadership
+   • Managers: #ProcessImprovement #TeamProductivity #Automation #ChangeLeadership #TeamTransformation
+5. TIMING: Recomienda según audiencia:
+   • Tech: Martes-Jueves 8-10am
+   • Finance: Lunes-Miércoles 7-9am
+   • Exec: Lunes-Viernes 6-8am
+   • Managers: Martes-Jueves 12-2pm
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -285,8 +392,8 @@ FORMATO DE RESPUESTA (JSON estricto):
     }
   ],
   "post_copies": [{"audience": "${input.audienceMode}", "text": "LinkedIn post"}],
-  "hashtags": ["#transformation", "#results"],
-  "schedule_suggestions": ["Mejor momento"]
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Día y hora óptima basado en audiencia ${input.audienceMode}"]
 }
 
 IMPORTANTE: Responde SOLO con el JSON.`
@@ -295,9 +402,18 @@ IMPORTANTE: Responde SOLO con el JSON.`
 
 CONTEXT:
 - Audience: ${input.audienceMode.toUpperCase()}
-- Objective: Show transformation/results (${input.objective})
+- Objective: Brand Positioning (BAB Framework - success stories, ROI)
 - Template: Before-After-Bridge (BAB Framework)
 - Slide count: ${input.slideCount}
+
+SOURCE CONTENT ANALYSIS:
+The source content may come from extracted URLs or direct text. Your job is to EXTRACT the most valuable insights:
+
+1. PRIORITIZE: Look for transformation metrics, concrete before/after, ROI, time saved
+2. SYNTHESIZE: If content is long (>2000 words), extract the most impactful transformation case
+3. EXPAND: If content is short (<200 words), expand with transformation examples using ${audience.benefits[lang]}
+4. IDENTIFY: Clear numeric contrast (from X to Y, Z% reduction, $ savings)
+5. FALLBACK: If content is insufficient, generate transformation case based on ${audience.painPoints[lang]} → ${audience.benefits[lang]}
 
 TASK:
 Create a carousel showing clear transformation using the BAB framework:
@@ -309,13 +425,43 @@ Slides ${Math.floor(input.slideCount * 0.3) + 1}-${Math.floor(input.slideCount *
 Slides ${Math.floor(input.slideCount * 0.6) + 1}-${input.slideCount - 1} (BRIDGE): How it was achieved - process/methodology
 Slide ${input.slideCount} (CTA): Next step
 
-COPYWRITING PRINCIPLES:
-1. Hook: Promise + Metric (e.g., "From 60 min to 5 min: How we optimized...")
+COPYWRITING PRINCIPLES (with examples):
+1. Hook: Promise + Metric
+   ✅ GOOD: "From 60 minutes to 5 minutes: How we optimized deployments in 3 months"
+   ❌ BAD: "We improved our deployments"
+
 2. Before: Real, specific pain points
-3. After: Concrete numbers (%, hours saved, $, etc.)
+   ✅ GOOD: "Deployments failed 40% of the time, team working until 10pm"
+   ❌ BAD: "We had deployment problems"
+
+3. After: Concrete numbers (%, hours saved, $)
+   ✅ GOOD: "95% success rate, team leaves at 6pm, saves $50k/year"
+   ❌ BAD: "It works better now"
+
 4. Bridge: Actionable steps, not just "we hired X"
+   ✅ GOOD: "Implemented parallel pipelines + automated tests + auto-rollback"
+   ❌ BAD: "Hired a CI/CD tool"
+
 5. Visual contrast: before (negative) vs after (positive)
+
 6. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
+
+7. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Use extreme numeric contrast + emoji if appropriate (📈, ⚡, 🚀)
+2. BEFORE/AFTER: Dramatic contrast with specific numbers
+3. CTA: If objective is "engagement", ask "What was your biggest obstacle in similar transformation?"
+4. HASHTAGS: Generate 3-5 relevant hashtags for ${input.audienceMode}:
+   • Tech: #DevOps #CloudTransformation #TechOptimization #DigitalTransformation #AgileTransformation
+   • Finance: #ROI #CostReduction #FinancialTransformation #OPEX #DigitalFinance
+   • Exec: #BusinessTransformation #ChangeManagement #Innovation #DigitalStrategy #Leadership
+   • Managers: #ProcessImprovement #TeamProductivity #Automation #ChangeLeadership #TeamTransformation
+5. TIMING: Recommend based on audience:
+   • Tech: Tuesday-Thursday 8-10am
+   • Finance: Monday-Wednesday 7-9am
+   • Exec: Monday-Friday 6-8am
+   • Managers: Tuesday-Thursday 12-2pm
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -335,8 +481,8 @@ RESPONSE FORMAT (strict JSON):
     }
   ],
   "post_copies": [{"audience": "${input.audienceMode}", "text": "LinkedIn post"}],
-  "hashtags": ["#transformation", "#results"],
-  "schedule_suggestions": ["Best time"]
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Optimal day and time based on ${input.audienceMode} audience"]
 }
 
 IMPORTANT: Respond ONLY with JSON.`
@@ -352,15 +498,25 @@ export function buildEducationalPrompt(input: GenerationInput, corpus: string): 
   const audience = AUDIENCE_PROFILES[input.audienceMode]
   const toneStyle = TONE_STYLES[input.tone][lang]
   const depthLevel = DEPTH_LEVELS[input.technicalDepth][lang]
-  const ctas = OBJECTIVE_CTAS[input.objective] || OBJECTIVE_CTAS["thought-leadership"]
+  // AIDA Framework → Objetivo implícito: Thought Leadership (educar audiencia)
+  const ctas = OBJECTIVE_CTAS["thought-leadership"]
 
   const promptEs = `Eres un Senior B2B Thought Leader y Content Strategist especializado en contenido educativo de alto valor.
 
 CONTEXTO:
 - Audiencia: ${input.audienceMode.toUpperCase()}
-- Objetivo: Educar y posicionar como experto (${input.objective})
+- Objetivo: Thought Leadership (AIDA Framework - educar y posicionar como experto)
 - Template: Educational Hook (AIDA Framework)
 - Número de slides: ${input.slideCount}
+
+ANÁLISIS DE CONTENIDO FUENTE:
+El contenido base puede venir de un URL extraído o texto directo. Tu trabajo es EXTRAER lo más valioso:
+
+1. PRIORIZA: Busca insights únicos, frameworks originales, datos contraintuitivos, metodologías
+2. SINTETIZA: Si el contenido es largo (>2000 palabras), extrae las 3-5 lecciones clave más valiosas
+3. EXPANDE: Si el contenido es corto (<200 palabras), expande con pasos accionables usando ${audience.vocabulary[lang]}
+4. IDENTIFICA: Stats sorprendentes o datos que desafíen asunciones convencionales
+5. FALLBACK: Si el contenido es insuficiente, genera insights educativos basándote en ${audience.painPoints[lang]} con ejemplos prácticos
 
 TAREA:
 Crea un carrusel educativo de alto valor usando el framework AIDA:
@@ -371,13 +527,41 @@ Slides 2-${Math.floor(input.slideCount * 0.5)} (INTEREST): Insights valiosos, da
 Slides ${Math.floor(input.slideCount * 0.5) + 1}-${input.slideCount - 1} (DESIRE): Por qué esto importa para ellos - beneficios de aplicar esto
 Slide ${input.slideCount} (ACTION): CTA suave tipo thought leadership
 
-COPYWRITING PRINCIPLES:
+COPYWRITING PRINCIPLES (con ejemplos):
 1. Hook: Stat contraintuitivo o pregunta que desafíe asunciones
-2. Insights: Información única, no genérica. Framework propio si es posible.
+   ✅ BUENO: "87% de CTOs priorizan velocidad sobre calidad. Están equivocados."
+   ❌ MALO: "La calidad del código es importante"
+
+2. Insights: Información única, no genérica. Framework propio si es posible
+   ✅ BUENO: "Framework RAPID: Review-Automate-Parallelize-Integrate-Deploy"
+   ❌ MALO: "Haz CI/CD mejor"
+
 3. Educativo: Paso a paso, "Aquí te muestro cómo..."
+   ✅ BUENO: "Paso 1: Audita pipelines actuales. Paso 2: Identifica bottlenecks. Paso 3:..."
+   ❌ MALO: "Mejora tus procesos"
+
 4. Valor primero: 90% educación, 10% promoción
+
 5. CTA suave: ${ctas[lang][0]}, ${ctas[lang][1]}
+
 6. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
+
+7. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Stat contraintuitivo + pregunta provocativa. Emoji opcional (🧠, 💡, 📊)
+2. FRAMEWORKS: Si creas framework, usa acrónimo memorable (RAPID, SMART, etc.)
+3. CTA: Pregunta abierta para generar comentarios: "¿Cuál de estos 5 pasos te parece más crítico?"
+4. HASHTAGS: Genera 3-5 hashtags thought leadership para ${input.audienceMode}:
+   • Tech: #TechLeadership #EngineeringExcellence #DevOps #SoftwareArchitecture #TechStrategy
+   • Finance: #FinancialLeadership #CFOInsights #FinTech #StrategicFinance #FinanceTransformation
+   • Exec: #ThoughtLeadership #ExecutiveInsights #BusinessStrategy #Leadership #Innovation
+   • Managers: #LeadershipDevelopment #TeamManagement #ManagerTips #PeopleManagement #LeadershipSkills
+5. TIMING: Recomienda según audiencia:
+   • Tech: Martes-Jueves 8-10am (morning learning time)
+   • Finance: Lunes-Miércoles 7-9am (strategic planning hours)
+   • Exec: Lunes-Viernes 6-8am (early morning insight consumption)
+   • Managers: Martes-Jueves 12-2pm (lunch learning)
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -397,8 +581,8 @@ FORMATO DE RESPUESTA (JSON estricto):
     }
   ],
   "post_copies": [{"audience": "${input.audienceMode}", "text": "Thought leadership post"}],
-  "hashtags": ["#thoughtleadership", "#${input.audienceMode}"],
-  "schedule_suggestions": ["Mejor momento para thought leadership"]
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Día y hora óptima basado en audiencia ${input.audienceMode}"]
 }
 
 IMPORTANTE: Responde SOLO con el JSON.`
@@ -407,9 +591,18 @@ IMPORTANTE: Responde SOLO con el JSON.`
 
 CONTEXT:
 - Audience: ${input.audienceMode.toUpperCase()}
-- Objective: Educate and position as expert (${input.objective})
+- Objective: Thought Leadership (AIDA Framework - educate and position as expert)
 - Template: Educational Hook (AIDA Framework)
 - Slide count: ${input.slideCount}
+
+SOURCE CONTENT ANALYSIS:
+The source content may come from extracted URLs or direct text. Your job is to EXTRACT the most valuable insights:
+
+1. PRIORITIZE: Look for unique insights, original frameworks, counter-intuitive data, methodologies
+2. SYNTHESIZE: If content is long (>2000 words), extract the 3-5 most valuable key lessons
+3. EXPAND: If content is short (<200 words), expand with actionable steps using ${audience.vocabulary[lang]}
+4. IDENTIFY: Surprising stats or data that challenge conventional assumptions
+5. FALLBACK: If content is insufficient, generate educational insights based on ${audience.painPoints[lang]} with practical examples
 
 TASK:
 Create a high-value educational carousel using the AIDA framework:
@@ -420,13 +613,41 @@ Slides 2-${Math.floor(input.slideCount * 0.5)} (INTEREST): Valuable insights, da
 Slides ${Math.floor(input.slideCount * 0.5) + 1}-${input.slideCount - 1} (DESIRE): Why this matters to them - benefits of applying this
 Slide ${input.slideCount} (ACTION): Soft CTA thought leadership style
 
-COPYWRITING PRINCIPLES:
+COPYWRITING PRINCIPLES (with examples):
 1. Hook: Counter-intuitive stat or assumption-challenging question
-2. Insights: Unique information, not generic. Proprietary framework if possible.
+   ✅ GOOD: "87% of CTOs prioritize speed over quality. They're wrong."
+   ❌ BAD: "Code quality is important"
+
+2. Insights: Unique information, not generic. Proprietary framework if possible
+   ✅ GOOD: "RAPID Framework: Review-Automate-Parallelize-Integrate-Deploy"
+   ❌ BAD: "Do CI/CD better"
+
 3. Educational: Step-by-step, "Let me show you how..."
+   ✅ GOOD: "Step 1: Audit current pipelines. Step 2: Identify bottlenecks. Step 3:..."
+   ❌ BAD: "Improve your processes"
+
 4. Value first: 90% education, 10% promotion
+
 5. Soft CTA: ${ctas[lang][0]}, ${ctas[lang][1]}
+
 6. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
+
+7. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Counter-intuitive stat + provocative question. Optional emoji (🧠, 💡, 📊)
+2. FRAMEWORKS: If creating framework, use memorable acronym (RAPID, SMART, etc.)
+3. CTA: Open question to generate comments: "Which of these 5 steps seems most critical?"
+4. HASHTAGS: Generate 3-5 thought leadership hashtags for ${input.audienceMode}:
+   • Tech: #TechLeadership #EngineeringExcellence #DevOps #SoftwareArchitecture #TechStrategy
+   • Finance: #FinancialLeadership #CFOInsights #FinTech #StrategicFinance #FinanceTransformation
+   • Exec: #ThoughtLeadership #ExecutiveInsights #BusinessStrategy #Leadership #Innovation
+   • Managers: #LeadershipDevelopment #TeamManagement #ManagerTips #PeopleManagement #LeadershipSkills
+5. TIMING: Recommend based on audience:
+   • Tech: Tuesday-Thursday 8-10am (morning learning time)
+   • Finance: Monday-Wednesday 7-9am (strategic planning hours)
+   • Exec: Monday-Friday 6-8am (early morning insight consumption)
+   • Managers: Tuesday-Thursday 12-2pm (lunch learning)
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -446,8 +667,8 @@ RESPONSE FORMAT (strict JSON):
     }
   ],
   "post_copies": [{"audience": "${input.audienceMode}", "text": "Thought leadership post"}],
-  "hashtags": ["#thoughtleadership", "#${input.audienceMode}"],
-  "schedule_suggestions": ["Best time for thought leadership"]
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Optimal day and time based on ${input.audienceMode} audience"]
 }
 
 IMPORTANT: Respond ONLY with JSON.`
@@ -473,6 +694,15 @@ CONTEXTO:
 - Objetivo: ${input.objective}
 - Número de slides: ${input.slideCount}
 
+ANÁLISIS DE CONTENIDO FUENTE:
+El contenido base puede venir de un URL extraído o texto directo. Tu trabajo es EXTRAER lo más valioso:
+
+1. PRIORIZA: Busca datos numéricos, estadísticas, casos concretos, insights accionables
+2. SINTETIZA: Si el contenido es largo (>2000 palabras), extrae las 3-5 ideas MÁS relevantes para ${input.audienceMode}
+3. EXPANDE: Si el contenido es corto (<200 palabras), expande con ejemplos específicos usando ${audience.vocabulary[lang]}
+4. IDENTIFICA: Números concretos, métricas de impacto, resultados cuantificables
+5. FALLBACK: Si el contenido es insuficiente o irrelevante, genera contenido basándote en ${audience.painPoints[lang]} y ${audience.benefits[lang]} con ejemplos de industria
+
 TAREA:
 Crea un carrusel de LinkedIn de ${input.slideCount} slides optimizado para máximo engagement.
 
@@ -481,14 +711,41 @@ Slide 1 (HOOK): Apertura impactante con problema/beneficio/stat numérico que en
 Slides 2-${input.slideCount - 1}: Desarrolla el contenido con valor claro (insights, pasos, beneficios, datos)
 Slide ${input.slideCount} (CTA): Call to action directo
 
-COPYWRITING PRINCIPLES:
-1. Hook potente: Específico + Numérico + Relevante (ej: "${audience.painPoints[lang]}")
+COPYWRITING PRINCIPLES (con ejemplos):
+1. Hook potente: Específico + Numérico + Relevante
+   ✅ BUENO: "DevOps: ¿Tus pipelines tardan 45+ minutos? Aquí está el problema"
+   ❌ MALO: "Los pipelines son importantes para DevOps"
+
 2. Bullets: Empieza con verbo de acción, máximo ${input.copyLength === "short" ? "40" : "100"} caracteres
+   ✅ BUENO: "Automatiza tests E2E - reduce tiempo de QA 70%"
+   ❌ MALO: "Los tests automatizados son buenos"
+
 3. IMPORTANTE: Genera 4-5 bullets por slide para llenar el espacio visual (formato 1080x1080px)
+
 4. Benefits > Features: Enfócate en ${audience.benefits[lang]}
+   ✅ BUENO: "Elimina 200 horas/mes de trabajo manual"
+   ❌ MALO: "Tiene automatización"
+
 5. Usa vocabulario de ${input.audienceMode}: ${audience.vocabulary[lang]}
+
 6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, o similar
+
 7. Progresión lógica: Cada slide debe conectar naturalmente con el siguiente
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Usa número específico + emoji estratégico si apropiado (🚨, 💡, 📊)
+2. STATS: Incluye al menos 2-3 números concretos en el carrusel
+3. CTA: Si objetivo es "engagement", termina con pregunta abierta
+4. HASHTAGS: Genera 3-5 hashtags relevantes específicos para ${input.audienceMode}:
+   • Tech: #DevOps #CI/CD #CloudNative #TechLeadership #SoftwareEngineering
+   • Finance: #CFO #ROI #FinTech #CostOptimization #FinancialStrategy
+   • Exec: #DigitalTransformation #Leadership #Innovation #Strategy #BusinessGrowth
+   • Managers: #TeamManagement #Productivity #AgileManagement #Leadership #TeamBuilding
+5. TIMING: Recomienda mejores días/horas según audiencia:
+   • Tech: Martes-Jueves 8-10am
+   • Finance: Lunes-Miércoles 7-9am
+   • Exec: Lunes-Viernes 6-8am
+   • Managers: Martes-Jueves 12-2pm
 
 TONO: ${toneStyle}
 PROFUNDIDAD TÉCNICA: ${depthLevel}
@@ -507,9 +764,9 @@ FORMATO DE RESPUESTA (JSON estricto):
       "visual_direction": "Descripción visual para este slide"
     }
   ],
-  "post_copies": [{"audience": "tech", "text": "LinkedIn post copy aquí"}],
-  "hashtags": ["#hashtag1", "#hashtag2"],
-  "schedule_suggestions": ["Mejor día/hora para postear"]
+  "post_copies": [{"audience": "${input.audienceMode}", "text": "LinkedIn post copy aquí"}],
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Día y hora óptima basado en audiencia ${input.audienceMode}"]
 }
 
 IMPORTANTE: Responde SOLO con el JSON, sin explicaciones adicionales.`
@@ -521,6 +778,15 @@ CONTEXT:
 - Objective: ${input.objective}
 - Slide count: ${input.slideCount}
 
+SOURCE CONTENT ANALYSIS:
+The source content may come from extracted URLs or direct text. Your job is to EXTRACT the most valuable insights:
+
+1. PRIORITIZE: Look for numeric data, statistics, concrete cases, actionable insights
+2. SYNTHESIZE: If content is long (>2000 words), extract the 3-5 MOST relevant ideas for ${input.audienceMode}
+3. EXPAND: If content is short (<200 words), expand with specific examples using ${audience.vocabulary[lang]}
+4. IDENTIFY: Concrete numbers, impact metrics, quantifiable results
+5. FALLBACK: If content is insufficient or irrelevant, generate content based on ${audience.painPoints[lang]} and ${audience.benefits[lang]} with industry examples
+
 TASK:
 Create a LinkedIn carousel with ${input.slideCount} slides optimized for maximum engagement.
 
@@ -529,14 +795,41 @@ Slide 1 (HOOK): Impactful opening with problem/benefit/numeric stat that hooks $
 Slides 2-${input.slideCount - 1}: Develop content with clear value (insights, steps, benefits, data)
 Slide ${input.slideCount} (CTA): Direct call to action
 
-COPYWRITING PRINCIPLES:
-1. Strong hook: Specific + Numeric + Relevant (e.g., "${audience.painPoints[lang]}")
+COPYWRITING PRINCIPLES (with examples):
+1. Strong hook: Specific + Numeric + Relevant
+   ✅ GOOD: "DevOps: Are your pipelines taking 45+ minutes? Here's the problem"
+   ❌ BAD: "Pipelines are important for DevOps"
+
 2. Bullets: Start with action verb, max ${input.copyLength === "short" ? "40" : "100"} characters
+   ✅ GOOD: "Automate E2E tests - reduce QA time by 70%"
+   ❌ BAD: "Automated tests are good"
+
 3. IMPORTANT: Generate 4-5 bullets per slide to fill visual space (1080x1080px format)
+
 4. Benefits > Features: Focus on ${audience.benefits[lang]}
+   ✅ GOOD: "Eliminate 200 hours/month of manual work"
+   ❌ BAD: "Has automation"
+
 5. Use ${input.audienceMode} vocabulary: ${audience.vocabulary[lang]}
+
 6. CTA: ${ctas[lang][0]}, ${ctas[lang][1]}, or similar
+
 7. Logical progression: Each slide should flow naturally to the next
+
+LINKEDIN BEST PRACTICES:
+1. HOOK (Slide 1): Use specific number + strategic emoji if appropriate (🚨, 💡, 📊)
+2. STATS: Include at least 2-3 concrete numbers in the carousel
+3. CTA: If objective is "engagement", end with open question
+4. HASHTAGS: Generate 3-5 relevant hashtags specific to ${input.audienceMode}:
+   • Tech: #DevOps #CI/CD #CloudNative #TechLeadership #SoftwareEngineering
+   • Finance: #CFO #ROI #FinTech #CostOptimization #FinancialStrategy
+   • Exec: #DigitalTransformation #Leadership #Innovation #Strategy #BusinessGrowth
+   • Managers: #TeamManagement #Productivity #AgileManagement #Leadership #TeamBuilding
+5. TIMING: Recommend best days/times by audience:
+   • Tech: Tuesday-Thursday 8-10am
+   • Finance: Monday-Wednesday 7-9am
+   • Exec: Monday-Friday 6-8am
+   • Managers: Tuesday-Thursday 12-2pm
 
 TONE: ${toneStyle}
 TECHNICAL DEPTH: ${depthLevel}
@@ -555,9 +848,9 @@ RESPONSE FORMAT (strict JSON):
       "visual_direction": "Visual description for this slide"
     }
   ],
-  "post_copies": [{"audience": "tech", "text": "LinkedIn post copy here"}],
-  "hashtags": ["#hashtag1", "#hashtag2"],
-  "schedule_suggestions": ["Best day/time to post"]
+  "post_copies": [{"audience": "${input.audienceMode}", "text": "LinkedIn post copy here"}],
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "schedule_suggestions": ["Optimal day and time based on ${input.audienceMode} audience"]
 }
 
 IMPORTANT: Respond ONLY with JSON, no additional explanations.`
